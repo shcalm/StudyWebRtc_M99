@@ -676,12 +676,14 @@ void RtpTransportControllerSend::UpdateStreamsConfig() {
   if (controller_)
     PostUpdates(controller_->OnStreamsConfig(streams_config_));
 }
-
+//hua2 update config 
 void RtpTransportControllerSend::PostUpdates(NetworkControlUpdate update) {
   if (update.congestion_window) {
+    RTC_LOG(LS_WARNING)<<" hua2 update.congestion_window " << ToLogString(update.congestion_window); 
     pacer()->SetCongestionWindow(*update.congestion_window);
   }
   if (update.pacer_config) {
+    RTC_LOG(LS_WARNING)<<" hua2 update.pacer_config " << ToLogString(update.pacer_config->data_rate()); 
     pacer()->SetPacingRates(update.pacer_config->data_rate(),
                             update.pacer_config->pad_rate());
   }

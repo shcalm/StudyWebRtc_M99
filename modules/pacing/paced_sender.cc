@@ -56,7 +56,7 @@ PacedSender::~PacedSender() {
     process_thread_->DeRegisterModule(&module_proxy_);
   }
 }
-
+//hua2 probecluster is for probe bitreate quickly
 void PacedSender::CreateProbeCluster(DataRate bitrate, int cluster_id) {
   MutexLock lock(&mutex_);
   return pacing_controller_.CreateProbeCluster(bitrate, cluster_id);

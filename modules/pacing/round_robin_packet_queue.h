@@ -37,23 +37,28 @@ class RoundRobinPacketQueue {
   RoundRobinPacketQueue(Timestamp start_time,
                         const WebRtcKeyValueConfig* field_trials);
   ~RoundRobinPacketQueue();
-
+//hua2 插入不同优先级的报文
   void Push(int priority,
-            Timestamp enqueue_time,
-            uint64_t enqueue_order,
+            Timestamp enqueue_time,//入队时间
+            uint64_t enqueue_order,//入队次序，priority相同时候，比较order
             std::unique_ptr<RtpPacketToSend> packet);
+//hua2 pop
   std::unique_ptr<RtpPacketToSend> Pop();
 
   bool Empty() const;
+//hua2 报文的总个数
   size_t SizeInPackets() const;
+//hua2 报文的字节数
   DataSize Size() const;
   // If the next packet, that would be returned by Pop() if called
   // now, is an audio packet this method returns the enqueue time
   // of that packet. If queue is empty or top packet is not audio,
   // returns nullopt.
+  //hua2下一个pop的报文如果是音频包，则返回该包时间戳，非音频包则返回nullopt
   absl::optional<Timestamp> LeadingAudioPacketEnqueueTime() const;
-
+//hua2 队列中最旧的报文时间戳
   Timestamp OldestEnqueueTime() const;
+//hua2 TODO
   TimeDelta AverageQueueTime() const;
   void UpdateQueueTime(Timestamp now);
   void SetPauseState(bool paused, Timestamp now);
@@ -102,7 +107,7 @@ class RoundRobinPacketQueue {
     const_iterator begin() const;
     const_iterator end() const;
   };
-
+  //hua2 首先比较优先级，然后比较size大小
   struct StreamPrioKey {
     StreamPrioKey(int priority, DataSize size)
         : priority(priority), size(size) {}
@@ -122,10 +127,10 @@ class RoundRobinPacketQueue {
     Stream(const Stream&);
 
     virtual ~Stream();
-
+//hua2 已经发送的报文总大小，发送少的优先被调度
     DataSize size;
     uint32_t ssrc;
-
+//hua2 一个根据StreamPrioKey确定优先级的优先队列
     PriorityPacketQueue packet_queue;
 
     // Whenever a packet is inserted for this stream we check if `priority_it`

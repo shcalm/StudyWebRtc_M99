@@ -209,15 +209,15 @@ class PacingController {
   // utilized when there's no media to send.
   IntervalBudget padding_budget_;
 
-  DataSize media_debt_;
+  DataSize media_debt_;//hua2
   DataSize padding_debt_;
-  DataRate media_rate_;
+  DataRate media_rate_;//hua2
   DataRate padding_rate_;
 
   BitrateProber prober_;
   bool probing_send_failure_;
 
-  DataRate pacing_bitrate_;
+  DataRate pacing_bitrate_;//hua2 
 
   Timestamp last_process_time_;
   Timestamp last_send_time_;
@@ -230,7 +230,7 @@ class PacingController {
   DataSize outstanding_data_;
 
   TimeDelta queue_time_limit;
-  bool account_for_audio_;
+  bool account_for_audio_;//hua2
   bool include_overhead_;
 };
 }  // namespace webrtc

@@ -222,12 +222,14 @@ void TaskQueuePacedSender::MaybeProcessPackets(
   // no scheduled task or the schedule has shifted forward in time, run
   // anyway and clear any schedule.
   Timestamp next_process_time = pacing_controller_.NextSendTime();
+  RTC_LOG(LS_WARNING)<< "hua2 MaybeProcessPackets next_process_ time = "<< ToLogString(next_process_time) << " scheduled_process_time " <<ToLogString(scheduled_process_time);
   const Timestamp now = clock_->CurrentTime();
   const bool is_scheduled_call = next_process_time_ == scheduled_process_time;
   if (is_scheduled_call) {
     // Indicate no pending scheduled call.
     next_process_time_ = Timestamp::MinusInfinity();
   }
+  //hua2 
   if (is_scheduled_call ||
       (now >= next_process_time && (next_process_time_.IsInfinite() ||
                                     next_process_time < next_process_time_))) {
@@ -238,14 +240,16 @@ void TaskQueuePacedSender::MaybeProcessPackets(
   TimeDelta hold_back_window = max_hold_back_window_;
   DataRate pacing_rate = pacing_controller_.pacing_rate();
   DataSize avg_packet_size = DataSize::Bytes(packet_size_.filtered());
+  RTC_LOG(LS_WARNING)<< " hua2 max_hold_back_window_ " << ToLogString(max_hold_back_window_) << " " << ToLogString(pacing_rate)<< " " << ToLogString(avg_packet_size);
   if (max_hold_back_window_in_packets_ > 0 && !pacing_rate.IsZero() &&
       !avg_packet_size.IsZero()) {
     TimeDelta avg_packet_send_time = avg_packet_size / pacing_rate;
     hold_back_window =
         std::min(hold_back_window,
                  avg_packet_send_time * max_hold_back_window_in_packets_);
+    RTC_LOG(LS_WARNING)<<" hua2 max_hold_back_window_in_packets_ " << max_hold_back_window_in_packets_ << " avg_packet_send_time " <<ToLogString(avg_packet_send_time) << " hold_back_window " << ToLogString(hold_back_window); 
   }
-
+  RTC_LOG(LS_WARNING)<<" hua2 next_process_time_ " << ToLogString(next_process_time_) << " next_process_time " << ToLogString(next_process_time) << " hold_back_window " << ToLogString(hold_back_window);
   absl::optional<TimeDelta> time_to_next_process;
   if (pacing_controller_.IsProbing() &&
       next_process_time != next_process_time_) {
@@ -269,6 +273,7 @@ void TaskQueuePacedSender::MaybeProcessPackets(
 
   if (time_to_next_process) {
     // Set a new scheduled process time and post a delayed task.
+    RTC_LOG(LS_WARNING)<<" hua2 next_process_time_ " << ToLogString(next_process_time_) << " next_process_time " << ToLogString(next_process_time) << " time_to_next_process " << ToLogString(*time_to_next_process);
     next_process_time_ = next_process_time;
 
     task_queue_.PostDelayedTask(

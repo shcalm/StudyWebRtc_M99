@@ -42,7 +42,7 @@ constexpr TimeDelta kLossUpdateInterval = TimeDelta::Millis(1000);
 // the number of bytes that can be transmitted per interval.
 // Increasing this factor will result in lower delays in cases of bitrate
 // overshoots from the encoder.
-constexpr float kDefaultPaceMultiplier = 2.5f;
+constexpr float kDefaultPaceMultiplier = 2.5f;//hua2 this factor impact on delay
 
 // If the probe result is far below the current throughput estimate
 // it's unlikely that the probe is accurate, so we don't want to drop too far.

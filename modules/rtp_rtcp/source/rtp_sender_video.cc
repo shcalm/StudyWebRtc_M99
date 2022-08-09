@@ -662,7 +662,7 @@ bool RTPSenderVideo::SendVideo(
 
   bool first_frame = first_frame_sent_();
   std::vector<std::unique_ptr<RtpPacketToSend>> rtp_packets;
-  RTC_LOG(LS_WARNING)<< "songhua2 num_packets "<< num_packets ;
+  RTC_LOG(LS_WARNING)<< "hua2 num_packets "<< num_packets ;
   for (size_t i = 0; i < num_packets; ++i) {    
     std::unique_ptr<RtpPacketToSend> packet;
     int expected_payload_capacity;
@@ -699,7 +699,7 @@ bool RTPSenderVideo::SendVideo(
       packet->set_packetization_finish_time_ms(clock_->TimeInMilliseconds());
     }
     if(i == num_packets - 1 || i == 0)
-      RTC_LOG(LS_WARNING)<<"songhua2 packaget " << packet->ToString() << " i =  " << i;
+      RTC_LOG(LS_WARNING)<<"hua2 packaget " << packet->ToString() << " i =  " << i;
     packet->set_fec_protect_packet(use_fec);
 
     if (red_enabled()) {

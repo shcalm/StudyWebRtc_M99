@@ -317,13 +317,14 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
 
   FieldTrialParameter<DataRate> min_bandwidth("min",
                                               DataRate::KilobitsPerSec(30));
+  //hua2 change start bitrate
   FieldTrialParameter<DataRate> start_bandwidth("start",
                                                 DataRate::KilobitsPerSec(300 * 20));
   FieldTrialParameter<DataRate> max_bandwidth("max",
                                               DataRate::KilobitsPerSec(2000));
   ParseFieldTrial({&min_bandwidth, &start_bandwidth, &max_bandwidth},
                   trials().Lookup("WebRTC-PcFactoryDefaultBitrates"));
-  RTC_LOG(LS_WARNING)<< "songhua2 start bitrate " << start_bandwidth->bps();
+  RTC_LOG(LS_WARNING)<< "hua2 start bitrate " << start_bandwidth->bps();
   
   call_config.bitrate_config.min_bitrate_bps =
       rtc::saturated_cast<int>(min_bandwidth->bps());

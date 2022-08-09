@@ -188,8 +188,11 @@ void PacingController::UpdateOutstandingData(DataSize outstanding_data) {
     UpdateBudgetWithElapsedTime(elapsed_time);
   }
 }
-
+//hua2 outstanding_data_ congestion_window_size_
+//
+//
 bool PacingController::Congested() const {
+  RTC_LOG(LS_WARNING)<<" hua2 outstanding_data_ " << ToLogString(outstanding_data_) << " congestion_window_size_ " << ToLogString(congestion_window_size_);
   if (congestion_window_size_.IsFinite()) {
     return outstanding_data_ >= congestion_window_size_;
   }
@@ -222,20 +225,17 @@ void PacingController::SetPacingRates(DataRate pacing_rate,
                                       DataRate padding_rate) {
   RTC_DCHECK_GT(pacing_rate, DataRate::Zero());
   DataRate new_pacing_rate = DataRate::KilobitsPerSec(10000);
-  // media_rate_ = pacing_rate;
-  // padding_rate_ = padding_rate;
-  // pacing_bitrate_ = pacing_rate;
-  // padding_budget_.set_target_rate_kbps(padding_rate.kbps());
-
-  // RTC_LOG(LS_VERBOSE) << "bwe:pacer_updated pacing_kbps="
-  //                     << pacing_bitrate_.kbps()
-  //                     << " padding_budget_kbps=" << padding_rate.kbps();
-  media_rate_ = new_pacing_rate;
+  media_rate_ = pacing_rate;
   padding_rate_ = padding_rate;
-  pacing_bitrate_ = new_pacing_rate;
+  pacing_bitrate_ = pacing_rate;
   padding_budget_.set_target_rate_kbps(padding_rate.kbps());
 
-  RTC_LOG(LS_VERBOSE) << "bwe:pacer_updated pacing_kbps="
+  // media_rate_ = new_pacing_rate;
+  // padding_rate_ = padding_rate;
+  // pacing_bitrate_ = new_pacing_rate;
+  // padding_budget_.set_target_rate_kbps(padding_rate.kbps());
+
+  RTC_LOG(LS_VERBOSE) << "hua2 bwe:pacer_updated pacing_kbps="
                       << pacing_bitrate_.kbps()
                       << " padding_budget_kbps=" << padding_rate.kbps();
 }
@@ -418,9 +418,9 @@ void PacingController::ProcessPackets() {
   Timestamp target_send_time = now;
   if (mode_ == ProcessMode::kDynamic) {
     target_send_time = NextSendTime();
-    RTC_LOG(LS_WARNING)<< "songhua2 delta = " << ToLogString(target_send_time-now);
+    RTC_LOG(LS_WARNING)<< "songhua2 target_send_time " << ToLogString(target_send_time) << "delta = " << ToLogString(target_send_time-now) << " pace_audio_ " << pace_audio_ << " send_padding_if_silent_ " << send_padding_if_silent_;
     TimeDelta early_execute_margin =
-        prober_.is_probing() ? kMaxEarlyProbeProcessing : TimeDelta::Zero();
+        prober_.is_probing() ? kMaxEarlyProbeProcessing : TimeDelta::Zero();//hua2 1ms
     if (target_send_time.IsMinusInfinity()) {
       target_send_time = now;
     } else if (now < target_send_time - early_execute_margin) {
@@ -678,30 +678,30 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
   bool unpaced_audio_packet =
       !pace_audio_ && packet_queue_.LeadingAudioPacketEnqueueTime().has_value();
   bool is_probe = pacing_info.probe_cluster_id != PacedPacketInfo::kNotAProbe;
-  // if (!unpaced_audio_packet && !is_probe) { 
-  //   if (Congested()) {
-  //     // Don't send anything if congested.
-  //     return nullptr;
-  //   }
+  if (!unpaced_audio_packet && !is_probe) { 
+    if (Congested()) {
+      // Don't send anything if congested.
+      return nullptr;
+    }
 
-  //   if (mode_ == ProcessMode::kPeriodic) {
-  //     if (media_budget_.bytes_remaining() <= 0) {
-  //       // Not enough budget.
-  //       return nullptr;
-  //     }
-  //   } else {
-  //     // Dynamic processing mode.
-  //     if (now <= target_send_time) {
-  //       // We allow sending slightly early if we think that we would actually
-  //       // had been able to, had we been right on time - i.e. the current debt
-  //       // is not more than would be reduced to zero at the target sent time.
-  //       TimeDelta flush_time = media_debt_ / media_rate_;
-  //       if (now + flush_time > target_send_time) {
-  //         return nullptr;
-  //       }
-  //     }
-  //   }
-  // }
+    if (mode_ == ProcessMode::kPeriodic) {
+      if (media_budget_.bytes_remaining() <= 0) {
+        // Not enough budget.
+        return nullptr;
+      }
+    } else {
+      // Dynamic processing mode.
+      if (now <= target_send_time) {
+        // We allow sending slightly early if we think that we would actually
+        // had been able to, had we been right on time - i.e. the current debt
+        // is not more than would be reduced to zero at the target sent time.
+        TimeDelta flush_time = media_debt_ / media_rate_;
+        if (now + flush_time > target_send_time) {
+          return nullptr;
+        }
+      }
+    }
+  }
 
   return packet_queue_.Pop();
 }
@@ -736,8 +736,12 @@ void PacingController::UpdateBudgetWithElapsedTime(TimeDelta delta) {
     media_budget_.IncreaseBudget(delta.ms());
     padding_budget_.IncreaseBudget(delta.ms());
   } else {
-    media_debt_ -= std::min(media_debt_, media_rate_ * delta);
+    RTC_LOG(LS_WARNING) << " hua2 delta " << ToLogString(delta) << " media_debt_ " << ToLogString(media_debt_);
+    media_debt_ -= std::min(media_debt_, media_rate_ * delta);//hua2 media_debt decrease delta time
+    RTC_LOG(LS_WARNING) << " hua2 delta " << ToLogString(delta) << " media_debt_ " << ToLogString(media_debt_);
+    RTC_LOG(LS_WARNING) << " hua2 padding_rate_ " << ToLogString(padding_rate_) << " padding_debt_ " << ToLogString(padding_debt_);
     padding_debt_ -= std::min(padding_debt_, padding_rate_ * delta);
+    RTC_LOG(LS_WARNING) << " hua2 delta " << ToLogString(delta) << " media_debt_ " << ToLogString(padding_debt_);
   }
 }
 
@@ -748,7 +752,7 @@ void PacingController::UpdateBudgetWithSentData(DataSize size) {
     padding_budget_.UseBudget(size.bytes());
   } else {
     media_debt_ += size;
-    media_debt_ = std::min(media_debt_, media_rate_ * kMaxDebtInTime);
+    media_debt_ = std::min(media_debt_, media_rate_ * kMaxDebtInTime);//hua2 500ms
     padding_debt_ += size;
     padding_debt_ = std::min(padding_debt_, padding_rate_ * kMaxDebtInTime);
   }

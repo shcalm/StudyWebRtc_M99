@@ -201,6 +201,12 @@ class PacingController {
   // In periodic mode, `media_debt_` and `padding_debt_` will be used together
   // with the target rates.
 
+//hua2 上面注释写反了。应该如下
+  // In periodic mode, `media_budget_` and `padding_budget_` will be used to
+  // track when packets can be sent.
+  // In dynamic mode, `media_debt_` and `padding_debt_` will be used together
+  // with the target rates.
+
   // This is the media budget, keeping track of how many bits of media
   // we can pace out during the current interval.
   IntervalBudget media_budget_;

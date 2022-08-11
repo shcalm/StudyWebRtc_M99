@@ -352,14 +352,14 @@ bool PacingController::ShouldSendKeepalive(Timestamp now) const {
 
 Timestamp PacingController::NextSendTime() const {
   const Timestamp now = CurrentTime();
-
+  //hua2 暂停状态，+500ms
   if (paused_) {
     return last_send_time_ + kPausedProcessInterval;
   }
 
   // If probing is active, that always takes priority.
-  if (prober_.is_probing()) {
-    
+  //hua2 探测的话，探测为主
+  if (prober_.is_probing()) {    
     Timestamp probe_time = prober_.NextProbeTime(now);
     RTC_LOG(LS_WARNING)<<"songhua2 probing " << ToLogString(probe_time);
     // `probe_time` == PlusInfinity indicates no probe scheduled.
@@ -367,7 +367,7 @@ Timestamp PacingController::NextSendTime() const {
       return probe_time;
     }
   }
-
+  //hua2 periodic mode, +5ms
   if (mode_ == ProcessMode::kPeriodic) {
     // In periodic non-probing mode, we just have a fixed interval.
     return last_process_time_ + min_packet_limit_;
@@ -375,7 +375,7 @@ Timestamp PacingController::NextSendTime() const {
 
   // In dynamic mode, figure out when the next packet should be sent,
   // given the current conditions.
-
+  //hua2 pace_audio_ default is 0，找到audio的enqueueTime
   if (!pace_audio_) {
     // Not pacing audio, if leading packet is audio its target send
     // time is the time at which it was enqueued.
@@ -385,13 +385,14 @@ Timestamp PacingController::NextSendTime() const {
       return *audio_enqueue_time;
     }
   }
-
+  //如果拥塞了或者没有包，那么next_send_time 就是+500ms
   if (Congested() || packet_counter_ == 0) {
     // We need to at least send keep-alive packets with some interval.
     return last_send_time_ + kCongestedPacketInterval;
   }
 
   // Check how long until we can send the next media packet.
+  //hua2 码率非0，那么下一次时间 就是(+500，需要发送的debt的时间)，取小
   if (media_rate_ > DataRate::Zero() && !packet_queue_.Empty()) {
     return std::min(last_send_time_ + kPausedProcessInterval,
                     last_process_time_ + media_debt_ / media_rate_);
@@ -400,6 +401,7 @@ Timestamp PacingController::NextSendTime() const {
   // If we _don't_ have pending packets, check how long until we have
   // bandwidth for padding packets. Both media and padding debts must
   // have been drained to do this.
+  //hua2 
   if (padding_rate_ > DataRate::Zero() && packet_queue_.Empty()) {
     TimeDelta drain_time =
         std::max(media_debt_ / media_rate_, padding_debt_ / padding_rate_);
@@ -430,7 +432,7 @@ void PacingController::ProcessPackets() {
       UpdateBudgetWithElapsedTime(elapsed_time);
       return;
     }
-
+  //hua2 解bug的
     if (target_send_time < last_process_time_) {
       // After the last process call, at time X, the target send time
       // shifted to be earlier than X. This should normally not happen
@@ -585,15 +587,17 @@ void PacingController::ProcessPackets() {
     RTC_DCHECK(rtp_packet);
     RTC_DCHECK(rtp_packet->packet_type().has_value());
     const RtpPacketMediaType packet_type = *rtp_packet->packet_type();
+    //hua2 默认大小就是payload
     DataSize packet_size = DataSize::Bytes(rtp_packet->payload_size() +
                                            rtp_packet->padding_size());
-
+    //hua2 是不是要加header
     if (include_overhead_) {
       packet_size += DataSize::Bytes(rtp_packet->headers_size()) +
                      transport_overhead_per_packet_;
     }
 
     packet_sender_->SendPacket(std::move(rtp_packet), pacing_info);
+    //hua2 need to check fec TODO
     for (auto& packet : packet_sender_->FetchFec()) {
       EnqueuePacket(std::move(packet));
     }

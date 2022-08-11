@@ -168,7 +168,7 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
   }
 
   RTC_DCHECK(!Empty());
-  Stream* stream = GetHighestPriorityStream();
+  Stream* stream = GetHighestPriorityStream();//hua2 最高优先级的流
   const QueuedPacket& queued_packet = stream->packet_queue.top();
 
   stream_priorities_.erase(stream->priority_it);
@@ -179,7 +179,7 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
   // by subtracting it now we effectively remove the time spent in in the
   // queue while in a paused state.
   TimeDelta time_in_non_paused_state =
-      time_last_updated_ - queued_packet.EnqueueTime() - pause_time_sum_;
+      time_last_updated_ - queued_packet.EnqueueTime() - pause_time_sum_;//hua2 EnqueueTime的时间是减去paused的时间，这个时候需要恢复下
   queue_time_sum_ -= time_in_non_paused_state;
 
   RTC_CHECK(queued_packet.EnqueueTimeIterator() != enqueue_times_.end());
@@ -194,7 +194,7 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
   DataSize packet_size = PacketSize(queued_packet);
   stream->size =
       std::max(stream->size + packet_size, max_size_ - kMaxLeadingSize);
-  max_size_ = std::max(max_size_, stream->size);
+  max_size_ = std::max(max_size_, stream->size);//hua2 各种流的最大值
 
   size_ -= packet_size;
   size_packets_ -= 1;
@@ -207,7 +207,7 @@ std::unique_ptr<RtpPacketToSend> RoundRobinPacketQueue::Pop() {
   RTC_CHECK(!IsSsrcScheduled(stream->ssrc));
   if (stream->packet_queue.empty()) {
     stream->priority_it = stream_priorities_.end();
-  } else {
+  } else {//hua2 替换成上个包的priority
     int priority = stream->packet_queue.top().Priority();
     stream->priority_it = stream_priorities_.emplace(
         StreamPrioKey(priority, stream->size), stream->ssrc);
@@ -275,7 +275,7 @@ void RoundRobinPacketQueue::UpdateQueueTime(Timestamp now) {
   if (paused_) {
     pause_time_sum_ += delta;
   } else {
-    queue_time_sum_ += TimeDelta::Micros(delta.us() * size_packets_);
+    queue_time_sum_ += TimeDelta::Micros(delta.us() * size_packets_);//hua2 所有包都更新时间
   }
 
   time_last_updated_ = now;
@@ -330,12 +330,12 @@ void RoundRobinPacketQueue::Push(QueuedPacket packet) {
 
   Stream* stream = &stream_info_it->second;
 
-  if (stream->priority_it == stream_priorities_.end()) {
+  if (stream->priority_it == stream_priorities_.end()) {//hua2 当前的stream_priorities_没有ssrc的priority，那么insert
     // If the SSRC is not currently scheduled, add it to `stream_priorities_`.
     RTC_CHECK(!IsSsrcScheduled(stream->ssrc));
     stream->priority_it = stream_priorities_.emplace(
         StreamPrioKey(packet.Priority(), stream->size), packet.Ssrc());
-  } else if (packet.Priority() < stream->priority_it->first.priority) {
+  } else if (packet.Priority() < stream->priority_it->first.priority) {//hua2 有的话  替换
     // If the priority of this SSRC increased, remove the outdated StreamPrioKey
     // and insert a new one with the new priority. Note that `priority_` uses
     // lower ordinal for higher priority.
@@ -345,7 +345,7 @@ void RoundRobinPacketQueue::Push(QueuedPacket packet) {
   }
   RTC_CHECK(stream->priority_it != stream_priorities_.end());
 
-  if (packet.EnqueueTimeIterator() == enqueue_times_.end()) {
+  if (packet.EnqueueTimeIterator() == enqueue_times_.end()) {//hua2 the firest packet iterator is end
     // Promotion from single-packet queue. Just add to enqueue times.
     packet.UpdateEnqueueTimeIterator(
         enqueue_times_.insert(packet.EnqueueTime()));
@@ -386,7 +386,7 @@ void RoundRobinPacketQueue::MaybePromoteSinglePacketToNormalQueue() {
 RoundRobinPacketQueue::Stream*
 RoundRobinPacketQueue::GetHighestPriorityStream() {
   RTC_CHECK(!stream_priorities_.empty());
-  uint32_t ssrc = stream_priorities_.begin()->second;
+  uint32_t ssrc = stream_priorities_.begin()->second;//hua2 the high priority is at begin
 
   auto stream_info_it = streams_.find(ssrc);
   RTC_CHECK(stream_info_it != streams_.end());

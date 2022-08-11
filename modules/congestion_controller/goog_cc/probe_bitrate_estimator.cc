@@ -58,7 +58,7 @@ ProbeBitrateEstimator::ProbeBitrateEstimator(RtcEventLog* event_log)
     : event_log_(event_log) {}
 
 ProbeBitrateEstimator::~ProbeBitrateEstimator() = default;
-
+//hua2 handle feedback from remote
 absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
     const PacketResult& packet_feedback) {
   int cluster_id = packet_feedback.sent_packet.pacing_info.probe_cluster_id;

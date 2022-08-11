@@ -45,7 +45,7 @@ void IntervalBudget::IncreaseBudget(int64_t delta_time_ms) {
     bytes_remaining_ = std::min(bytes, max_bytes_in_budget_);
   }
 }
-
+//hua2 用了多少预算，不能小于-max
 void IntervalBudget::UseBudget(size_t bytes) {
   bytes_remaining_ = std::max(bytes_remaining_ - static_cast<int>(bytes),
                               -max_bytes_in_budget_);
@@ -54,7 +54,7 @@ void IntervalBudget::UseBudget(size_t bytes) {
 size_t IntervalBudget::bytes_remaining() const {
   return rtc::saturated_cast<size_t>(std::max<int64_t>(0, bytes_remaining_));
 }
-
+//hua2 可用的预算占最大的比例
 double IntervalBudget::budget_ratio() const {
   if (max_bytes_in_budget_ == 0)
     return 0.0;

@@ -120,7 +120,7 @@ void BitrateProber::CreateProbeCluster(DataRate bitrate,
   if (probing_state_ != ProbingState::kActive)
     probing_state_ = ProbingState::kInactive;
 }
-
+//hua2 next probe time
 Timestamp BitrateProber::NextProbeTime(Timestamp now) const {
   // Probing is not active or probing is already complete.
   if (probing_state_ != ProbingState::kActive || clusters_.empty()) {

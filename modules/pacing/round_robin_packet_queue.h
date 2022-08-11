@@ -159,17 +159,17 @@ class RoundRobinPacketQueue {
   size_t size_packets_;
   DataSize size_;
   DataSize max_size_;
-  TimeDelta queue_time_sum_;
-  TimeDelta pause_time_sum_;
+  TimeDelta queue_time_sum_;//hua2 所有包的入队时间总和
+  TimeDelta pause_time_sum_;//hua2 pause时间总和
 
   // A map of streams used to prioritize from which stream to send next. We use
   // a multimap instead of a priority_queue since the priority of a stream can
   // change as a new packet is inserted, and a multimap allows us to remove and
   // then reinsert a StreamPrioKey if the priority has increased.
-  std::multimap<StreamPrioKey, uint32_t> stream_priorities_;
+  std::multimap<StreamPrioKey, uint32_t> stream_priorities_;//hua2 streampriokey->ssrc
 
   // A map of SSRCs to Streams.
-  std::unordered_map<uint32_t, Stream> streams_;
+  std::unordered_map<uint32_t, Stream> streams_;//hua2 ssrc-> stream
 
   // The enqueue time of every packet currently in the queue. Used to figure out
   // the age of the oldest packet in the queue.

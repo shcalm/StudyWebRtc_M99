@@ -47,11 +47,13 @@ PacketRouter::~PacketRouter() {
 void PacketRouter::AddSendRtpModule(RtpRtcpInterface* rtp_module,
                                     bool remb_candidate) {
   MutexLock lock(&modules_mutex_);
-
+  //hua2 媒体流
   AddSendRtpModuleToMap(rtp_module, rtp_module->SSRC());
+  //hua2 RTX流
   if (absl::optional<uint32_t> rtx_ssrc = rtp_module->RtxSsrc()) {
     AddSendRtpModuleToMap(rtp_module, *rtx_ssrc);
   }
+  //hua2 flexfec 流
   if (absl::optional<uint32_t> flexfec_ssrc = rtp_module->FlexfecSsrc()) {
     AddSendRtpModuleToMap(rtp_module, *flexfec_ssrc);
   }

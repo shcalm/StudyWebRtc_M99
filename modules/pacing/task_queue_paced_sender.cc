@@ -18,7 +18,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/trace_event.h"
-
+#include "sdk/android/native_api/stacktrace/stacktrace.h"
 namespace webrtc {
 
 TaskQueuePacedSender::TaskQueuePacedSender(
@@ -30,8 +30,8 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     TimeDelta max_hold_back_window,
     int max_hold_back_window_in_packets)
     : clock_(clock),
-      max_hold_back_window_(max_hold_back_window),
-      max_hold_back_window_in_packets_(max_hold_back_window_in_packets),
+      max_hold_back_window_(max_hold_back_window),//hua2 1ms
+      max_hold_back_window_in_packets_(max_hold_back_window_in_packets),//hua2 -1
       pacing_controller_(clock,
                          packet_sender,
                          event_log,
@@ -140,14 +140,14 @@ void TaskQueuePacedSender::EnqueuePackets(
   task_queue_.PostTask([this, packets_ = std::move(packets)]() mutable {
     RTC_DCHECK_RUN_ON(&task_queue_);
     for (auto& packet : packets_) {
-      packet_size_.Apply(1, packet->size());
+      packet_size_.Apply(1, packet->size());//hua2 计算packet大小的平滑值
       RTC_DCHECK_GE(packet->capture_time_ms(), 0);
       pacing_controller_.EnqueuePacket(std::move(packet));
     }
     MaybeProcessPackets(Timestamp::MinusInfinity());
   });
 }
-
+//hua2 audio 是不是被计算到带宽中
 void TaskQueuePacedSender::SetAccountForAudioPackets(bool account_for_audio) {
   task_queue_.PostTask([this, account_for_audio]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
@@ -155,7 +155,7 @@ void TaskQueuePacedSender::SetAccountForAudioPackets(bool account_for_audio) {
     MaybeProcessPackets(Timestamp::MinusInfinity());
   });
 }
-
+//hua2 是不是整个包都被利用到带宽中，否则的话只有media 的payload
 void TaskQueuePacedSender::SetIncludeOverhead() {
   task_queue_.PostTask([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
@@ -163,7 +163,7 @@ void TaskQueuePacedSender::SetIncludeOverhead() {
     MaybeProcessPackets(Timestamp::MinusInfinity());
   });
 }
-
+//hua2 udp ip的头是不是被计算到带宽中
 void TaskQueuePacedSender::SetTransportOverhead(DataSize overhead_per_packet) {
   task_queue_.PostTask([this, overhead_per_packet]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
@@ -171,7 +171,7 @@ void TaskQueuePacedSender::SetTransportOverhead(DataSize overhead_per_packet) {
     MaybeProcessPackets(Timestamp::MinusInfinity());
   });
 }
-
+//hua2 pacer的延时最大值
 void TaskQueuePacedSender::SetQueueTimeLimit(TimeDelta limit) {
   task_queue_.PostTask([this, limit]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
@@ -229,7 +229,9 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     // Indicate no pending scheduled call.
     next_process_time_ = Timestamp::MinusInfinity();
   }
-  //hua2 
+  //hua2 ？？？
+  //next_process_time_ 怎么理解，取值无限或者有限代表什么
+  //next_process_time 和 0 比较代表什么
   if (is_scheduled_call ||
       (now >= next_process_time && (next_process_time_.IsInfinite() ||
                                     next_process_time < next_process_time_))) {

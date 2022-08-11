@@ -71,3 +71,6 @@
 /xcodebuild
 /.vscode
 !webrtc/*
+GPATH
+GTAGS
+GRTAGS

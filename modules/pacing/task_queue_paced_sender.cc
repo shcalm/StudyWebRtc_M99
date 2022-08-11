@@ -144,6 +144,7 @@ void TaskQueuePacedSender::EnqueuePackets(
       RTC_DCHECK_GE(packet->capture_time_ms(), 0);
       pacing_controller_.EnqueuePacket(std::move(packet));
     }
+    //hua2 unlike paced_sender ,task_queue_sender neeed care about process
     MaybeProcessPackets(Timestamp::MinusInfinity());
   });
 }
@@ -225,6 +226,7 @@ void TaskQueuePacedSender::MaybeProcessPackets(
   RTC_LOG(LS_WARNING)<< "hua2 MaybeProcessPackets next_process_ time = "<< ToLogString(next_process_time) << " scheduled_process_time " <<ToLogString(scheduled_process_time);
   const Timestamp now = clock_->CurrentTime();
   const bool is_scheduled_call = next_process_time_ == scheduled_process_time;
+  //hua2 预料中的process，执行
   if (is_scheduled_call) {
     // Indicate no pending scheduled call.
     next_process_time_ = Timestamp::MinusInfinity();
@@ -242,7 +244,7 @@ void TaskQueuePacedSender::MaybeProcessPackets(
   TimeDelta hold_back_window = max_hold_back_window_;
   DataRate pacing_rate = pacing_controller_.pacing_rate();
   DataSize avg_packet_size = DataSize::Bytes(packet_size_.filtered());
-  RTC_LOG(LS_WARNING)<< " hua2 max_hold_back_window_ " << ToLogString(max_hold_back_window_) << " " << ToLogString(pacing_rate)<< " " << ToLogString(avg_packet_size);
+  //hua2 max_hold_back_window_in_packets_ default is -1
   if (max_hold_back_window_in_packets_ > 0 && !pacing_rate.IsZero() &&
       !avg_packet_size.IsZero()) {
     TimeDelta avg_packet_send_time = avg_packet_size / pacing_rate;
@@ -270,6 +272,7 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     // Schedule a new task since there is none currently scheduled
     // (`next_process_time_` is infinite), or the new process time is at least
     // one holdback window earlier than whatever is currently scheduled.
+    //hua2 下次时间至少是1ms
     time_to_next_process = std::max(next_process_time - now, hold_back_window);
   }
 

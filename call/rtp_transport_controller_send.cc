@@ -734,8 +734,8 @@ void RtpTransportControllerSend::OnReceivedRtcpReceiverReportBlocks(
     return;
   Timestamp now = Timestamp::Millis(now_ms);
   TransportLossReport msg;
-  msg.packets_lost_delta = total_packets_lost_delta;
-  msg.packets_received_delta = packets_received_delta;
+  msg.packets_lost_delta = total_packets_lost_delta;//hua2 和上次rr比 的丢包数
+  msg.packets_received_delta = packets_received_delta;//hua2 和上次rr比 总的包数
   msg.receive_time = now;
   msg.start_time = last_report_block_time_;
   msg.end_time = now;

@@ -582,7 +582,7 @@ void RTCPReceiver::HandleSenderReport(const CommonHeader& rtcp_block,
 
   packet_information->remote_ssrc = remote_ssrc;
 
-  UpdateTmmbrRemoteIsAlive(remote_ssrc);
+  UpdateTmmbrRemoteIsAlive(remote_ssrc);//hua2 ignore now 0824
 
   // Have I received RTP packets from this party?
   if (remote_ssrc_ == remote_ssrc) {
@@ -607,7 +607,7 @@ void RTCPReceiver::HandleSenderReport(const CommonHeader& rtcp_block,
 
 void RTCPReceiver::HandleReceiverReport(const CommonHeader& rtcp_block,
                                         PacketInformation* packet_information) {
-  rtcp::ReceiverReport receiver_report;
+  rtcp::ReceiverReport receiver_report;//hua2 a rr rtcp packet
   if (!receiver_report.Parse(rtcp_block)) {
     ++num_skipped_packets_;
     return;
@@ -617,7 +617,7 @@ void RTCPReceiver::HandleReceiverReport(const CommonHeader& rtcp_block,
 
   packet_information->remote_ssrc = remote_ssrc;
 
-  UpdateTmmbrRemoteIsAlive(remote_ssrc);
+  UpdateTmmbrRemoteIsAlive(remote_ssrc);//hua2 ignore now 0824
 
   packet_information->packet_type_flags |= kRtcpRr;
 

@@ -29,7 +29,7 @@ constexpr size_t CommonHeader::kHeaderSizeBytes;
 // Common header for all RTCP packets, 4 octets.
 bool CommonHeader::Parse(const uint8_t* buffer, size_t size_bytes) {
   const uint8_t kVersion = 2;
-
+  //hua2 4 bytes
   if (size_bytes < kHeaderSizeBytes) {
     RTC_LOG(LS_WARNING)
         << "Too little data (" << size_bytes << " byte"
@@ -37,7 +37,7 @@ bool CommonHeader::Parse(const uint8_t* buffer, size_t size_bytes) {
         << ") remaining in buffer to parse RTCP header (4 bytes).";
     return false;
   }
-
+  //hua2 version == 2
   uint8_t version = buffer[0] >> 6;
   if (version != kVersion) {
     RTC_LOG(LS_WARNING) << "Invalid RTCP header: Version must be "
@@ -45,10 +45,13 @@ bool CommonHeader::Parse(const uint8_t* buffer, size_t size_bytes) {
                         << static_cast<int>(version);
     return false;
   }
-
+  //hua2 has padding or not
   bool has_padding = (buffer[0] & 0x20) != 0;
+  //hua2 RR is count 
   count_or_format_ = buffer[0] & 0x1F;
+  //hua2 payload type 
   packet_type_ = buffer[1];
+  //hua2 length is 32 bits lenght -1 也就是整个长度减去common header的长度
   payload_size_ = ByteReader<uint16_t>::ReadBigEndian(&buffer[2]) * 4;
   payload_ = buffer + kHeaderSizeBytes;
   padding_size_ = 0;
@@ -67,7 +70,7 @@ bool CommonHeader::Parse(const uint8_t* buffer, size_t size_bytes) {
              "size specified.";
       return false;
     }
-
+  //hua2 padding 最后一个字节是padding大小，包含自己
     padding_size_ = payload_[payload_size_ - 1];
     if (padding_size_ == 0) {
       RTC_LOG(LS_WARNING)

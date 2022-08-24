@@ -379,7 +379,7 @@ void SendSideBandwidthEstimation::UpdatePacketsLost(int64_t packets_lost,
   if (number_of_packets > 0) {
     int64_t expected =
         expected_packets_since_last_loss_update_ + number_of_packets;
-
+    //hua2 间隔的包数太少，低于20个包
     // Don't generate a loss rate until it can be based on enough packets.
     if (expected < kLimitNumPackets) {
       // Accumulate reports.
@@ -391,7 +391,7 @@ void SendSideBandwidthEstimation::UpdatePacketsLost(int64_t packets_lost,
     has_decreased_since_last_fraction_loss_ = false;
     int64_t lost_q8 = (lost_packets_since_last_loss_update_ + packets_lost)
                       << 8;
-    last_fraction_loss_ = std::min<int>(lost_q8 / expected, 255);
+    last_fraction_loss_ = std::min<int>(lost_q8 / expected, 255);//hua2  last_fraction_loss_和255 比较。最多255，最低0
 
     // Reset accumulators.
     lost_packets_since_last_loss_update_ = 0;
@@ -446,6 +446,7 @@ void SendSideBandwidthEstimation::UpdateRtt(TimeDelta rtt, Timestamp at_time) {
 }
 
 void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
+  //hua2 need to feature check
   if (rtt_backoff_.CorrectedRtt(at_time) > rtt_backoff_.rtt_limit_) {
     if (at_time - time_last_decrease_ >= rtt_backoff_.drop_interval_ &&
         current_target_ > rtt_backoff_.bandwidth_floor_) {
@@ -464,6 +465,7 @@ void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
 
   // We trust the REMB and/or delay-based estimate during the first 2 seconds if
   // we haven't had any packet loss reported, to allow startup bitrate probing.
+  //hua2 从收到第一个rr的2s内，且丢包数是0，那么我们更相信remb和delay based的估计
   if (last_fraction_loss_ == 0 && IsInStartPhase(at_time)) {
     DataRate new_bitrate = current_target_;
     // TODO(srte): We should not allow the new_bitrate to be larger than the
@@ -586,7 +588,14 @@ bool SendSideBandwidthEstimation::IsInStartPhase(Timestamp at_time) const {
   return first_report_time_.IsInfinite() ||
          at_time - first_report_time_ < kStartPhase;
 }
-
+//hua2 滑动窗口算法min_bitrate_history_ 表示一秒内的预估最小值。
+//// 主要结合这个函数解释下变量min_bitrate_history_
+// 这个变量的两个维度，front记录的是离当前最远的时间，
+// 每个速率都是按照时间先后顺序逐渐push到尾部。
+// 因此更新的时候，需要先将超时的元素从列表头剔除。
+// 后一个维度是最小速率值，
+// 在相同的时间区间内，保留最小的速率值
+//// 这样的操作较为简单，不用在每次插入元素时去判断对应的时间区域，再找到对应时间区间的最小值，用部分冗余的内存换取操作的快捷
 void SendSideBandwidthEstimation::UpdateMinHistory(Timestamp at_time) {
   // Remove old data points from history.
   // Since history precision is in ms, add one so it is able to increase

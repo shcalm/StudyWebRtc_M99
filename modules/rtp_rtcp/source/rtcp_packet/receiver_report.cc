@@ -56,7 +56,7 @@ bool ReceiverReport::Parse(const CommonHeader& packet) {
 
   report_blocks_.resize(report_blocks_count);
   for (ReportBlock& block : report_blocks_) {
-    block.Parse(next_report_block, ReportBlock::kLength);
+    block.Parse(next_report_block, ReportBlock::kLength);//hua2 klength = 24
     next_report_block += ReportBlock::kLength;
   }
 

@@ -62,7 +62,8 @@ TimeDelta GetDynamicPaddingTarget(const WebRtcKeyValueConfig& field_trials) {
                   field_trials.Lookup("WebRTC-Pacer-DynamicPaddingTarget"));
   return padding_target.Get();
 }
-
+//hua2 return rtp priority 
+//audio,retry,video,fec,padding
 int GetPriorityForType(RtpPacketMediaType type) {
   // Lower number takes priority over higher.
   switch (type) {
@@ -299,7 +300,7 @@ void PacingController::EnqueuePacketInternal(
   prober_.OnIncomingPacket(DataSize::Bytes(packet->payload_size()));
 
   Timestamp now = CurrentTime();
-
+//hua2 第一个包的处理,初始化各种参数
   if (mode_ == ProcessMode::kDynamic && packet_queue_.Empty()) {
     // If queue is empty, we need to "fast-forward" the last process time,
     // so that we don't use passed time as budget for sending the first new
@@ -419,7 +420,7 @@ void PacingController::ProcessPackets() {
   Timestamp now = CurrentTime();
   Timestamp target_send_time = now;
   if (mode_ == ProcessMode::kDynamic) {
-    target_send_time = NextSendTime();
+    target_send_time = NextSendTime();//target_send_time is now or now + <1ms or less now
     RTC_LOG(LS_WARNING)<< "songhua2 target_send_time " << ToLogString(target_send_time) << "delta = " << ToLogString(target_send_time-now) << " pace_audio_ " << pace_audio_ << " send_padding_if_silent_ " << send_padding_if_silent_;
     TimeDelta early_execute_margin =
         prober_.is_probing() ? kMaxEarlyProbeProcessing : TimeDelta::Zero();//hua2 1ms
@@ -485,7 +486,7 @@ void PacingController::ProcessPackets() {
       // has avg_time_left_ms left to get queue_size_bytes out of the queue, if
       // time constraint shall be met. Determine bitrate needed for that.
       packet_queue_.UpdateQueueTime(now);
-      if (drain_large_queues_) {
+      if (drain_large_queues_) {//hua2 true ,意思是如果当前带宽最大的时延，那么就改变下带宽大小，保证把数据都发出去
         TimeDelta avg_time_left =
             std::max(TimeDelta::Millis(1),
                      queue_time_limit - packet_queue_.AverageQueueTime());
@@ -565,6 +566,7 @@ void PacingController::ProcessPackets() {
 
     if (rtp_packet == nullptr) {
       // No packet available to send, check if we should send padding.
+      //hua2 如果队列没有包了，但是probe size还没有够，那么就加点padding包
       DataSize padding_to_add = PaddingToAdd(recommended_probe_size, data_sent);
       if (padding_to_add > DataSize::Zero()) {
         std::vector<std::unique_ptr<RtpPacketToSend>> padding_packets =
@@ -624,7 +626,7 @@ void PacingController::ProcessPackets() {
     }
   }
 
-  last_process_time_ = std::max(last_process_time_, previous_process_time);
+  last_process_time_ = std::max(last_process_time_, previous_process_time);//hua2 last_process_time_ 就是一次处理完毕后的时间
 
   if (is_probing) {
     probing_send_failure_ = data_sent == DataSize::Zero();

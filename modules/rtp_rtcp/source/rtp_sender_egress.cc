@@ -163,7 +163,7 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
         BweTestLoggingPlot(now_ms, packet_ssrc);
       }));
 #endif
-
+//hua2 run on 
   if (need_rtp_packet_infos_ &&
       packet->packet_type() == RtpPacketToSend::Type::kVideo) {
     worker_queue_->PostTask(ToQueuedTask(

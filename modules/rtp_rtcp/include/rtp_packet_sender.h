@@ -21,11 +21,13 @@ namespace webrtc {
 
 class RtpPacketSender {
  public:
+ //hua2 c++11 I think should equals virtual ~RtpPacketSender(){};
   virtual ~RtpPacketSender() = default;
 
   // Insert a set of packets into queue, for eventual transmission. Based on the
   // type of packets, they will be prioritized and scheduled relative to other
   // packets and the current target send rate.
+  //hua2 rtpSender enqueue package to pacer
   virtual void EnqueuePackets(
       std::vector<std::unique_ptr<RtpPacketToSend>> packets) = 0;
 };

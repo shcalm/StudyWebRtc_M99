@@ -230,7 +230,7 @@ std::vector<ProbeClusterConfig> ProbeController::OnMaxTotalAllocatedBitrate(
   max_total_allocated_bitrate_ = max_total_allocated_bitrate;
   return std::vector<ProbeClusterConfig>();
 }
-
+//hua2 网络状态变化时候开始探测
 std::vector<ProbeClusterConfig> ProbeController::OnNetworkAvailability(
     NetworkAvailability msg) {
   network_available_ = msg.network_available;
@@ -254,9 +254,9 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateExponentialProbing(
   // When probing at 1.8 Mbps ( 6x 300), this represents a threshold of
   // 1.2 Mbps to continue probing.
   std::vector<int64_t> probes = {static_cast<int64_t>(
-      config_.first_exponential_probe_scale * start_bitrate_bps_)};
+      config_.first_exponential_probe_scale * start_bitrate_bps_)};//hua2 3.0
   if (config_.second_exponential_probe_scale) {
-    probes.push_back(config_.second_exponential_probe_scale.Value() *
+    probes.push_back(config_.second_exponential_probe_scale.Value() *   //6.0
                      start_bitrate_bps_);
   }
   return InitiateProbing(at_time_ms, probes, true);
@@ -274,6 +274,7 @@ std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
     mid_call_probing_waiting_for_result_ = false;
   }
   std::vector<ProbeClusterConfig> pending_probes;
+  //hua2 如果探测出来的数据大于0.7的上次码率，那么接着探测，是探测出来码率的2倍
   if (state_ == State::kWaitingForProbingResult) {
     // Continue probing if probing results indicate channel has greater
     // capacity.
@@ -290,7 +291,7 @@ std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
           true);
     }
   }
-
+ //hua2 如果探测到的码率比估计的码率的0.66还小，记录一下
   if (bitrate_bps < kBitrateDropThreshold * estimated_bitrate_bps_) {
     time_of_last_large_drop_ms_ = at_time_ms;
     bitrate_before_last_large_drop_bps_ = estimated_bitrate_bps_;
@@ -370,6 +371,7 @@ void ProbeController::Reset(int64_t at_time_ms) {
 }
 
 std::vector<ProbeClusterConfig> ProbeController::Process(int64_t at_time_ms) {
+  //hua2 等待时间超过1s，就不等了
   if (at_time_ms - time_last_probing_initiated_ms_ >
       kMaxWaitingTimeForProbingResultMs) {
     mid_call_probing_waiting_for_result_ = false;
@@ -380,7 +382,7 @@ std::vector<ProbeClusterConfig> ProbeController::Process(int64_t at_time_ms) {
       min_bitrate_to_probe_further_bps_ = kExponentialProbingDisabled;
     }
   }
-
+//hua2 alr state 发送探测包
   if (enable_periodic_alr_probing_ && state_ == State::kProbingComplete) {
     // Probe bandwidth periodically when in ALR state.
     if (alr_start_time_ms_ && estimated_bitrate_bps_ > 0) {
@@ -397,11 +399,13 @@ std::vector<ProbeClusterConfig> ProbeController::Process(int64_t at_time_ms) {
   }
   return std::vector<ProbeClusterConfig>();
 }
-
+//hua2 初始化探测的config，然后通过rtptransportsend发送到pacer去发送
+//pacer然后等待数据入队，根据config来尽快发出pacer包。
 std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     int64_t now_ms,
     std::vector<int64_t> bitrates_to_probe,
     bool probe_further) {
+  //hua2 now probe default max bitrate is 5000kbps，which should be more in near scense TODO
   int64_t max_probe_bitrate_bps =
       max_bitrate_bps_ > 0 ? max_bitrate_bps_ : kDefaultMaxProbingBitrateBps;
   if (limit_probes_with_allocateable_rate_ &&
@@ -429,8 +433,8 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     config.at_time = Timestamp::Millis(now_ms);
     config.target_data_rate =
         DataRate::BitsPerSec(rtc::dchecked_cast<int>(bitrate));
-    config.target_duration = TimeDelta::Millis(kMinProbeDurationMs);
-    config.target_probe_count = kMinProbePacketsSent;
+    config.target_duration = TimeDelta::Millis(kMinProbeDurationMs);// hua2 15ms
+    config.target_probe_count = kMinProbePacketsSent;// 5 times
     config.id = next_probe_cluster_id_;
     next_probe_cluster_id_++;
     MaybeLogProbeClusterCreated(event_log_, config);
@@ -440,7 +444,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
   if (probe_further) {
     state_ = State::kWaitingForProbingResult;
     min_bitrate_to_probe_further_bps_ =
-        (*(bitrates_to_probe.end() - 1)) * config_.further_probe_threshold;
+        (*(bitrates_to_probe.end() - 1)) * config_.further_probe_threshold;//hua2 0.7* last probe bitrate
   } else {
     state_ = State::kProbingComplete;
     min_bitrate_to_probe_further_bps_ = kExponentialProbingDisabled;

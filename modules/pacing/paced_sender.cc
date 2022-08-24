@@ -173,7 +173,7 @@ TimeDelta PacedSender::OldestPacketWaitTime() const {
     return TimeDelta::Zero();
   return current - oldest_packet;
 }
-
+//hua2 should 5ms paced
 int64_t PacedSender::TimeUntilNextProcess() {
   MutexLock lock(&mutex_);
 

@@ -710,9 +710,11 @@ void RtpTransportControllerSend::OnReceivedRtcpReceiverReportBlocks(
   for (const RTCPReportBlock& report_block : report_blocks) {
     auto it = last_report_blocks_.find(report_block.source_ssrc);
     if (it != last_report_blocks_.end()) {
+      //hua2 包的个数
       auto number_of_packets = report_block.extended_highest_sequence_number -
                                it->second.extended_highest_sequence_number;
       total_packets_delta += number_of_packets;
+      //hua2 丢包的总个数
       auto lost_delta = report_block.packets_lost - it->second.packets_lost;
       total_packets_lost_delta += lost_delta;
     }
@@ -722,6 +724,7 @@ void RtpTransportControllerSend::OnReceivedRtcpReceiverReportBlocks(
   // not, total_packets_delta will be unchanged and there's nothing more to do.
   if (!total_packets_delta)
     return;
+  //hua2 总包数-丢包的个数
   int packets_received_delta = total_packets_delta - total_packets_lost_delta;
   // To detect lost packets, at least one packet has to be received. This check
   // is needed to avoid bandwith detection update in

@@ -80,6 +80,7 @@ void BitrateProber::SetEnabled(bool enable) {
 void BitrateProber::OnIncomingPacket(DataSize packet_size) {
   // Don't initialize probing unless we have something large enough to start
   // probing.
+  // hua2 有足够大的包，需要发送探测了
   if (probing_state_ == ProbingState::kInactive && !clusters_.empty() &&
       packet_size >= std::min(RecommendedMinProbeSize(), kMinProbePacketSize)) {
     // Send next probe right away.
@@ -120,7 +121,7 @@ void BitrateProber::CreateProbeCluster(DataRate bitrate,
   if (probing_state_ != ProbingState::kActive)
     probing_state_ = ProbingState::kInactive;
 }
-//hua2 next probe time
+// hua2 next probe time
 Timestamp BitrateProber::NextProbeTime(Timestamp now) const {
   // Probing is not active or probing is already complete.
   if (probing_state_ != ProbingState::kActive || clusters_.empty()) {
@@ -172,7 +173,7 @@ DataSize BitrateProber::RecommendedMinProbeSize() const {
   }
   DataRate send_rate =
       DataRate::BitsPerSec(clusters_.front().pace_info.send_bitrate_bps);
-  return 2 * send_rate * config_.min_probe_delta;
+  return 2 * send_rate * config_.min_probe_delta;//hua2 2 * 预估码流 * 1ms
 }
 
 void BitrateProber::ProbeSent(Timestamp now, DataSize size) {

@@ -38,6 +38,8 @@ class RtpRtcpInterface;
 // module if possible (sender report), otherwise on receive module
 // (receiver report). For the latter case, we also keep track of the
 // receive modules.
+//hua2 packetrouter 是用来处理ssrc对应的module来处理rtp包
+
 class PacketRouter : public PacingController::PacketSender {
  public:
   PacketRouter();

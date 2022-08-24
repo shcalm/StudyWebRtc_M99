@@ -182,7 +182,7 @@ void MediaChannel::SendRtp(const uint8_t* data,
             included_in_allocation;
         SendPacket(&packet, rtc_options);
       };
-
+  //hua2  send on network thread finaly
   // TODO(bugs.webrtc.org/11993): ModuleRtpRtcpImpl2 and related classes (e.g.
   // RTCPSender) aren't aware of the network thread and may trigger calls to
   // this function from different threads. Update those classes to keep

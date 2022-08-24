@@ -58,8 +58,9 @@ class RoundRobinPacketQueue {
   absl::optional<Timestamp> LeadingAudioPacketEnqueueTime() const;
 //hua2 队列中最旧的报文时间戳
   Timestamp OldestEnqueueTime() const;
-//hua2 TODO
+//hua2 平均入队时间
   TimeDelta AverageQueueTime() const;
+//hua2 更新入队时间
   void UpdateQueueTime(Timestamp now);
   void SetPauseState(bool paused, Timestamp now);
   void SetIncludeOverhead();

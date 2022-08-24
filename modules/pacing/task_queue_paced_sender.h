@@ -52,7 +52,7 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
       TaskQueueFactory* task_queue_factory,
       TimeDelta max_hold_back_window = PacingController::kMinSleepTime,
       int max_hold_back_window_in_packets = -1);
-
+  //hua2 c++ 11 ,需要父类的析构函数是virtual
   ~TaskQueuePacedSender() override;
 
   // Ensure that necessary delayed tasks are scheduled.
@@ -127,12 +127,15 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   // been scheduled by the pacing controller. If this is the case, check if
   // can execute immediately otherwise schedule a delay task that calls this
   // method again with desired (finite) scheduled process time.
+  //hua2 当有packet enqueu的时候或者其他环境改变时，需要主动调用这个函数来检查是否可以立即执行，或者schedule一个task来执行。
+  //当scheduled_process_time是负无穷大时候，那么就代表不是schedule，而是主动来检查的
   void MaybeProcessPackets(Timestamp scheduled_process_time);
 
   void UpdateStats() RTC_RUN_ON(task_queue_);
   Stats GetStats() const;
 
   Clock* const clock_;
+  //hua2 tq pacer interval max is max_hold_back_window default is 1ms
   const TimeDelta max_hold_back_window_;
   const int max_hold_back_window_in_packets_;
 
@@ -155,6 +158,7 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   bool is_shutdown_ RTC_GUARDED_BY(task_queue_);
 
   // Filtered size of enqueued packets, in bytes.
+  //hua2 avg packet size
   rtc::ExpFilter packet_size_ RTC_GUARDED_BY(task_queue_);
 
   mutable Mutex stats_mutex_;

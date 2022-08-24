@@ -22,13 +22,13 @@
 namespace webrtc {
 
 TaskQueuePacedSender::TaskQueuePacedSender(
-    Clock* clock,
-    PacingController::PacketSender* packet_sender,
+    Clock* clock,//hua2 get timestamp
+    PacingController::PacketSender* packet_sender, //hua2 packetrouter
     RtcEventLog* event_log,
-    const WebRtcKeyValueConfig* field_trials,
-    TaskQueueFactory* task_queue_factory,
-    TimeDelta max_hold_back_window,
-    int max_hold_back_window_in_packets)
+    const WebRtcKeyValueConfig* field_trials,//hua2 config 
+    TaskQueueFactory* task_queue_factory,//hua2 create task queue 
+    TimeDelta max_hold_back_window, //hua2 default is 1ms
+    int max_hold_back_window_in_packets)//hua2 can custom hold back window,but now is -1
     : clock_(clock),
       max_hold_back_window_(max_hold_back_window),//hua2 1ms
       max_hold_back_window_in_packets_(max_hold_back_window_in_packets),//hua2 -1
@@ -36,7 +36,7 @@ TaskQueuePacedSender::TaskQueuePacedSender(
                          packet_sender,
                          event_log,
                          field_trials,
-                         PacingController::ProcessMode::kDynamic),
+                         PacingController::ProcessMode::kDynamic),//hua2 taskqueue sender using task queue to post task
       next_process_time_(Timestamp::MinusInfinity()),
       is_started_(false),
       is_shutdown_(false),
@@ -231,9 +231,8 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     // Indicate no pending scheduled call.
     next_process_time_ = Timestamp::MinusInfinity();
   }
-  //hua2 ？？？
-  //next_process_time_ 怎么理解，取值无限或者有限代表什么
-  //next_process_time 和 0 比较代表什么
+  //hua2 
+ //如果next_process_time已经过去了，并且next_process_time_是有限值
   if (is_scheduled_call ||
       (now >= next_process_time && (next_process_time_.IsInfinite() ||
                                     next_process_time < next_process_time_))) {

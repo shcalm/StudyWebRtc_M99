@@ -44,7 +44,7 @@ constexpr int kExponentialProbingDisabled = 0;
 
 // Default probing bitrate limit. Applied only when the application didn't
 // specify max bitrate.
-constexpr int64_t kDefaultMaxProbingBitrateBps = 5000000;
+constexpr int64_t kDefaultMaxProbingBitrateBps = 500000000;//hua2 origin is 5000000
 
 // If the bitrate drops to a factor `kBitrateDropThreshold` or lower
 // and we recover within `kBitrateDropTimeoutMs`, then we'll send
@@ -142,7 +142,7 @@ ProbeController::ProbeController(const WebRtcKeyValueConfig* key_value_config,
 }
 
 ProbeController::~ProbeController() {}
-
+//hua2 from reset
 std::vector<ProbeClusterConfig> ProbeController::SetBitrates(
     int64_t min_bitrate_bps,
     int64_t start_bitrate_bps,
@@ -261,7 +261,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateExponentialProbing(
   }
   return InitiateProbing(at_time_ms, probes, true);
 }
-
+//hua2 called from goog ，当估算出来的码率设置下，检查是否需要继续探测
 std::vector<ProbeClusterConfig> ProbeController::SetEstimatedBitrate(
     int64_t bitrate_bps,
     int64_t at_time_ms) {
@@ -312,7 +312,7 @@ void ProbeController::SetAlrStartTimeMs(
 void ProbeController::SetAlrEndedTimeMs(int64_t alr_end_time_ms) {
   alr_end_time_ms_.emplace(alr_end_time_ms);
 }
-
+//hua2 backoff_in_alr or recovered_from_overuse
 std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
     int64_t at_time_ms) {
   // Called once we have returned to normal state after a large drop in
@@ -369,7 +369,7 @@ void ProbeController::Reset(int64_t at_time_ms) {
   bitrate_before_last_large_drop_bps_ = 0;
   max_total_allocated_bitrate_ = 0;
 }
-
+//hua2 from interval process 25ms
 std::vector<ProbeClusterConfig> ProbeController::Process(int64_t at_time_ms) {
   //hua2 等待时间超过1s，就不等了
   if (at_time_ms - time_last_probing_initiated_ms_ >
@@ -419,11 +419,12 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     max_probe_bitrate_bps =
         std::min(max_probe_bitrate_bps, max_total_allocated_bitrate_ * 2);
   }
+  RTC_LOG(LS_WARNING)<<"hua2 init prob "<< max_probe_bitrate_bps;
 
   std::vector<ProbeClusterConfig> pending_probes;
   for (int64_t bitrate : bitrates_to_probe) {
     RTC_DCHECK_GT(bitrate, 0);
-
+    RTC_LOG(LS_WARNING)<<"hua2 bitrate  "<< bitrate;
     if (bitrate > max_probe_bitrate_bps) {
       bitrate = max_probe_bitrate_bps;
       probe_further = false;

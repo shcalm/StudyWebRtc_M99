@@ -37,8 +37,10 @@ BitrateProberConfig::BitrateProberConfig(
     : min_probe_packets_sent("min_probe_packets_sent", 5),
       min_probe_delta("min_probe_delta", TimeDelta::Millis(1)),
       min_probe_duration("min_probe_duration", TimeDelta::Millis(15)),
-      max_probe_delay("max_probe_delay", TimeDelta::Millis(10)),
+      max_probe_delay("max_probe_delay", TimeDelta::Millis(20)),
       abort_delayed_probes("abort_delayed_probes", true) {
+        RTC_LOG(LS_WARNING)<<"hua2 ProbingConfiguration " << key_value_config->Lookup("WebRTC-Bwe-ProbingConfiguration");
+        RTC_LOG(LS_WARNING)<<"hua2 ProbingBehavior " << key_value_config->Lookup("WebRTC-Bwe-ProbingBehavior");
   ParseFieldTrial(
       {&min_probe_packets_sent, &min_probe_delta, &min_probe_duration,
        &max_probe_delay, &abort_delayed_probes},
@@ -96,8 +98,10 @@ void BitrateProber::CreateProbeCluster(DataRate bitrate,
   RTC_DCHECK_GT(bitrate, DataRate::Zero());
 
   total_probe_count_++;
+  //hua2 pop probe that more than 5s
   while (!clusters_.empty() &&
          now - clusters_.front().created_at > kProbeClusterTimeout) {
+    RTC_LOG(LS_WARNING)<<"hua2 CreateProbeCluster pop";
     clusters_.pop();
     total_failed_probe_count_++;
   }
@@ -129,9 +133,10 @@ Timestamp BitrateProber::NextProbeTime(Timestamp now) const {
   }
 
   // Legacy behavior, just warn about late probe and return as if not probing.
+  //hua2 next probe time is too early,10 ms early,so miss it .
   if (!config_.abort_delayed_probes && next_probe_time_.IsFinite() &&
       now - next_probe_time_ > config_.max_probe_delay.Get()) {
-    RTC_DLOG(LS_WARNING) << "Probe delay too high"
+    RTC_LOG(LS_WARNING) << "Probe delay too high"
                             " (next_ms:"
                          << next_probe_time_.ms() << ", now_ms: " << now.ms()
                          << ")";
@@ -148,10 +153,11 @@ absl::optional<PacedPacketInfo> BitrateProber::CurrentCluster(Timestamp now) {
 
   if (config_.abort_delayed_probes && next_probe_time_.IsFinite() &&
       now - next_probe_time_ > config_.max_probe_delay.Get()) {
-    RTC_DLOG(LS_WARNING) << "Probe delay too high"
+    RTC_LOG(LS_WARNING) << "Probe delay too high"
                             " (next_ms:"
                          << next_probe_time_.ms() << ", now_ms: " << now.ms()
                          << "), discarding probe cluster.";
+    RTC_LOG(LS_WARNING)<<"hua2 CurrentCluster pop";
     clusters_.pop();
     if (clusters_.empty()) {
       probing_state_ = ProbingState::kSuspended;
@@ -188,6 +194,8 @@ void BitrateProber::ProbeSent(Timestamp now, DataSize size) {
     }
     cluster->sent_bytes += size.bytes<int>();
     cluster->sent_probes += 1;
+    RTC_LOG(LS_WARNING)<<"hua probesent clusterid "<<cluster->pace_info.probe_cluster_id << " cluster->sent_bytes " <<  cluster->sent_bytes << " cluster->pace_info.probe_cluster_min_bytes " << cluster->pace_info.probe_cluster_min_bytes;
+    RTC_LOG(LS_WARNING)<<"hua probesent clusterid "<<cluster->pace_info.probe_cluster_id << " cluster->sent_probes " <<  cluster->sent_probes << " cluster->pace_info.probe_cluster_min_probes " << cluster->pace_info.probe_cluster_min_probes;
     next_probe_time_ = CalculateNextProbeTime(*cluster);
     if (cluster->sent_bytes >= cluster->pace_info.probe_cluster_min_bytes &&
         cluster->sent_probes >= cluster->pace_info.probe_cluster_min_probes) {
@@ -197,7 +205,7 @@ void BitrateProber::ProbeSent(Timestamp now, DataSize size) {
                                cluster->sent_probes);
       RTC_HISTOGRAM_COUNTS_10000("WebRTC.BWE.Probing.TimePerProbeCluster",
                                  (now - cluster->started_at).ms());
-
+      RTC_LOG(LS_WARNING)<<"hua2 ProbeSent pop";
       clusters_.pop();
     }
     if (clusters_.empty()) {

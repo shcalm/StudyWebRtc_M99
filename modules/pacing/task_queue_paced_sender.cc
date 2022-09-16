@@ -58,6 +58,7 @@ TaskQueuePacedSender::~TaskQueuePacedSender() {
 }
 
 void TaskQueuePacedSender::EnsureStarted() {
+  RTC_LOG(LS_WARNING)<<" EnsureStarted ";
   task_queue_.PostTask([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     is_started_ = true;
@@ -67,6 +68,7 @@ void TaskQueuePacedSender::EnsureStarted() {
 
 void TaskQueuePacedSender::CreateProbeCluster(DataRate bitrate,
                                               int cluster_id) {
+  RTC_LOG(LS_WARNING)<<" CreateProbeCluster bitrate " <<ToLogString(bitrate);                                              
   task_queue_.PostTask([this, bitrate, cluster_id]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.CreateProbeCluster(bitrate, cluster_id);
@@ -75,6 +77,7 @@ void TaskQueuePacedSender::CreateProbeCluster(DataRate bitrate,
 }
 
 void TaskQueuePacedSender::Pause() {
+  RTC_LOG(LS_WARNING)<<" Pause";
   task_queue_.PostTask([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.Pause();
@@ -82,6 +85,7 @@ void TaskQueuePacedSender::Pause() {
 }
 
 void TaskQueuePacedSender::Resume() {
+  RTC_LOG(LS_WARNING)<<" Resume";
   task_queue_.PostTask([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.Resume();
@@ -91,6 +95,8 @@ void TaskQueuePacedSender::Resume() {
 
 void TaskQueuePacedSender::SetCongestionWindow(
     DataSize congestion_window_size) {
+  
+  RTC_LOG(LS_WARNING)<<" SetCongestionWindow congestion_window_size " << ToLogString(congestion_window_size);    
   task_queue_.PostTask([this, congestion_window_size]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.SetCongestionWindow(congestion_window_size);
@@ -99,6 +105,8 @@ void TaskQueuePacedSender::SetCongestionWindow(
 }
 
 void TaskQueuePacedSender::UpdateOutstandingData(DataSize outstanding_data) {
+  //RTC_LOG(LS_WARNING) << StackTraceToString(GetStackTrace());
+  //RTC_LOG(LS_WARNING)<<" UpdateOutstandingData outstanding_data " << ToLogString(outstanding_data);    
   if (task_queue_.IsCurrent()) {
     RTC_DCHECK_RUN_ON(&task_queue_);
     // Fast path since this can be called once per sent packet while on the
@@ -117,6 +125,7 @@ void TaskQueuePacedSender::UpdateOutstandingData(DataSize outstanding_data) {
 
 void TaskQueuePacedSender::SetPacingRates(DataRate pacing_rate,
                                           DataRate padding_rate) {
+  RTC_LOG(LS_WARNING)<<" SetPacingRates pacing_rate " << ToLogString(pacing_rate);                                              
   task_queue_.PostTask([this, pacing_rate, padding_rate]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.SetPacingRates(pacing_rate, padding_rate);
@@ -139,11 +148,15 @@ void TaskQueuePacedSender::EnqueuePackets(
 
   task_queue_.PostTask([this, packets_ = std::move(packets)]() mutable {
     RTC_DCHECK_RUN_ON(&task_queue_);
+    RTC_LOG(LS_WARNING)<<"hua2 EnqueuePackets CurrentBufferLevel  ================="<<ToLogString(pacing_controller_.CurrentBufferLevel()); 
+    if(packets_.size() > 10) 
+      RTC_LOG(LS_WARNING)<<"hua2 EnqueuePackets size ================="<<packets_.size(); 
     for (auto& packet : packets_) {
       packet_size_.Apply(1, packet->size());//hua2 计算packet大小的平滑值
       RTC_DCHECK_GE(packet->capture_time_ms(), 0);
       pacing_controller_.EnqueuePacket(std::move(packet));
     }
+
     //hua2 unlike paced_sender ,task_queue_sender neeed care about process
     MaybeProcessPackets(Timestamp::MinusInfinity());
   });
@@ -217,14 +230,16 @@ void TaskQueuePacedSender::MaybeProcessPackets(
   if (is_shutdown_ || !is_started_) {
     return;
   }
-
+  
   // Normally, run ProcessPackets() only if this is the scheduled task.
   // If it is not but it is already time to process and there either is
   // no scheduled task or the schedule has shifted forward in time, run
   // anyway and clear any schedule.
   Timestamp next_process_time = pacing_controller_.NextSendTime();
-  RTC_LOG(LS_WARNING)<< "hua2 MaybeProcessPackets next_process_ time = "<< ToLogString(next_process_time) << " scheduled_process_time " <<ToLogString(scheduled_process_time);
+  
+ // RTC_LOG(LS_WARNING)<< "hua2 111 MaybeProcessPackets  next_process_ time = "<< ToLogString(next_process_time) << " scheduled_process_time " <<ToLogString(scheduled_process_time);
   const Timestamp now = clock_->CurrentTime();
+  //RTC_LOG(LS_WARNING)<<"hua2 222 MaybeProcessPackets now = "<<ToLogString(now) <<" delta " << ToLogString(next_process_time - now); //hua2good
   const bool is_scheduled_call = next_process_time_ == scheduled_process_time;
   //hua2 预料中的process，执行
   if (is_scheduled_call) {
@@ -236,11 +251,12 @@ void TaskQueuePacedSender::MaybeProcessPackets(
   if (is_scheduled_call ||
       (now >= next_process_time && (next_process_time_.IsInfinite() ||
                                     next_process_time < next_process_time_))) {
+    //RTC_LOG(LS_WARNING)<<" hua2 MaybeProcessPackets ProcessPackets "; //hua2good
     pacing_controller_.ProcessPackets();
     next_process_time = pacing_controller_.NextSendTime();
   }
 
-  TimeDelta hold_back_window = max_hold_back_window_;
+  TimeDelta hold_back_window = max_hold_back_window_;//hua2 1ms
   DataRate pacing_rate = pacing_controller_.pacing_rate();
   DataSize avg_packet_size = DataSize::Bytes(packet_size_.filtered());
   //hua2 max_hold_back_window_in_packets_ default is -1
@@ -249,10 +265,9 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     TimeDelta avg_packet_send_time = avg_packet_size / pacing_rate;
     hold_back_window =
         std::min(hold_back_window,
-                 avg_packet_send_time * max_hold_back_window_in_packets_);
-    RTC_LOG(LS_WARNING)<<" hua2 max_hold_back_window_in_packets_ " << max_hold_back_window_in_packets_ << " avg_packet_send_time " <<ToLogString(avg_packet_send_time) << " hold_back_window " << ToLogString(hold_back_window); 
+                 avg_packet_send_time * max_hold_back_window_in_packets_);  
   }
-  RTC_LOG(LS_WARNING)<<" hua2 next_process_time_ " << ToLogString(next_process_time_) << " next_process_time " << ToLogString(next_process_time) << " hold_back_window " << ToLogString(hold_back_window);
+  //RTC_LOG(LS_WARNING)<<" hua2 next_process_time_ " << ToLogString(next_process_time_) << " next_process_time " << ToLogString(next_process_time) << " hold_back_window " << ToLogString(hold_back_window);
   absl::optional<TimeDelta> time_to_next_process;
   if (pacing_controller_.IsProbing() &&
       next_process_time != next_process_time_) {
@@ -264,8 +279,9 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     } else {
       time_to_next_process =
           std::max(TimeDelta::Zero(),
-                   (next_process_time - now).RoundDownTo(TimeDelta::Millis(1)));
+                   (next_process_time - now).RoundDownTo(TimeDelta::Millis(1)));      
     }
+    RTC_LOG(LS_WARNING)<<" hua2 MaybeProcessPackets probe time_to_next_process " << ToLogString(*time_to_next_process);
   } else if (next_process_time_.IsMinusInfinity() ||
              next_process_time <= next_process_time_ - hold_back_window) {
     // Schedule a new task since there is none currently scheduled
@@ -274,12 +290,12 @@ void TaskQueuePacedSender::MaybeProcessPackets(
     //hua2 下次时间至少是1ms
     time_to_next_process = std::max(next_process_time - now, hold_back_window);
   }
-
+  
   if (time_to_next_process) {
     // Set a new scheduled process time and post a delayed task.
-    RTC_LOG(LS_WARNING)<<" hua2 next_process_time_ " << ToLogString(next_process_time_) << " next_process_time " << ToLogString(next_process_time) << " time_to_next_process " << ToLogString(*time_to_next_process);
+    //RTC_LOG(LS_WARNING)<<" hua2 time_to_next_process "<<ToLogString(*time_to_next_process)<< " next_process_time_ " << ToLogString(next_process_time_) << " next_process_time " << ToLogString(next_process_time) << " time_to_next_process " << ToLogString(*time_to_next_process); hua2good
     next_process_time_ = next_process_time;
-
+    RTC_LOG(LS_WARNING)<<" hua2 MaybeProcessPackets time_to_next_process " << ToLogString(*time_to_next_process);
     task_queue_.PostDelayedTask(
         [this, next_process_time]() { MaybeProcessPackets(next_process_time); },
         time_to_next_process->ms<uint32_t>());

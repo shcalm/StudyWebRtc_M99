@@ -394,7 +394,9 @@ void BitrateAllocator::OnNetworkEstimateChanged(TargetTransferRate msg) {
     RTC_LOG(LS_INFO) << "Current BWE " << last_target_bps_;
     last_bwe_log_time_ = now;
   }
-
+  RTC_LOG(LS_INFO) << "Current BWE " << last_target_bps_;
+  RTC_LOG(LS_WARNING) << "hua2 loss_ratio_255 " << loss_ratio_255 << " last_rtt_ " << last_rtt_ ;
+  
   auto allocation = AllocateBitrates(allocatable_tracks_, last_target_bps_);
   auto stable_bitrate_allocation =
       AllocateBitrates(allocatable_tracks_, last_stable_target_bps_);
@@ -449,6 +451,7 @@ void BitrateAllocator::AddObserver(BitrateAllocatorObserver* observer,
   RTC_DCHECK_RUN_ON(&sequenced_checker_);
   RTC_DCHECK_GT(config.bitrate_priority, 0);
   RTC_DCHECK(std::isnormal(config.bitrate_priority));
+  RTC_LOG(LS_WARNING)<< "hua2 addobserver min " << config.min_bitrate_bps << " max= " << config.max_bitrate_bps << " prio " << config.priority_bitrate_bps;
   auto it = absl::c_find_if(
       allocatable_tracks_,
       [observer](const auto& config) { return config.observer == observer; });

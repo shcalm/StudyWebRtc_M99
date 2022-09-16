@@ -120,7 +120,7 @@ class ProbeController {
   bool network_available_;
   State state_;
   int64_t min_bitrate_to_probe_further_bps_;
-  int64_t time_last_probing_initiated_ms_;
+  int64_t time_last_probing_initiated_ms_;//上次探测开始的时间
   int64_t estimated_bitrate_bps_;
   int64_t start_bitrate_bps_;
   int64_t max_bitrate_bps_;

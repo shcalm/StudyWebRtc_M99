@@ -196,6 +196,7 @@ void RtpTransportControllerSend::UpdateControlState() {
   absl::optional<TargetTransferRate> update = control_handler_->GetUpdate();
   if (!update)
     return;
+  //hua2 need to check 
   retransmission_rate_limiter_.SetMaxRate(update->target_rate.bps());
   // We won't create control_handler_ until we have an observers.
   RTC_DCHECK(observer_ != nullptr);
@@ -626,7 +627,7 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
   } else {
     RTC_LOG(LS_INFO) << "Creating fallback congestion controller";
     controller_ = controller_factory_fallback_->Create(initial_config_);
-    process_interval_ = controller_factory_fallback_->GetProcessInterval();
+    process_interval_ = controller_factory_fallback_->GetProcessInterval();//hua2 25ms
   }
   UpdateControllerWithTimeInterval();
   StartProcessPeriodicTasks();

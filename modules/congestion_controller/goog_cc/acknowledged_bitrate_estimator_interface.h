@@ -66,11 +66,12 @@ class AcknowledgedBitrateEstimatorInterface {
   static std::unique_ptr<AcknowledgedBitrateEstimatorInterface> Create(
       const WebRtcKeyValueConfig* key_value_config);
   virtual ~AcknowledgedBitrateEstimatorInterface();
-
+//hua2 from feedback rtcp 
   virtual void IncomingPacketFeedbackVector(
       const std::vector<PacketResult>& packet_feedback_vector) = 0;
   virtual absl::optional<DataRate> bitrate() const = 0;
   virtual absl::optional<DataRate> PeekRate() const = 0;
+  //hua2 alr is releated with ack
   virtual void SetAlr(bool in_alr) = 0;
   virtual void SetAlrEndedTime(Timestamp alr_ended_time) = 0;
 };

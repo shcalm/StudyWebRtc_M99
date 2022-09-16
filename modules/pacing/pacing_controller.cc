@@ -193,8 +193,9 @@ void PacingController::UpdateOutstandingData(DataSize outstanding_data) {
 //
 //
 bool PacingController::Congested() const {
-  RTC_LOG(LS_WARNING)<<" hua2 outstanding_data_ " << ToLogString(outstanding_data_) << " congestion_window_size_ " << ToLogString(congestion_window_size_);
+  //RTC_LOG(LS_WARNING)<<" hua2 outstanding_data_ " << ToLogString(outstanding_data_) << " congestion_window_size_ " << ToLogString(congestion_window_size_);
   if (congestion_window_size_.IsFinite()) {
+    
     return outstanding_data_ >= congestion_window_size_;
   }
   return false;
@@ -256,11 +257,13 @@ void PacingController::SetAccountForAudioPackets(bool account_for_audio) {
 }
 
 void PacingController::SetIncludeOverhead() {
+  RTC_LOG(LS_WARNING)<<" hua2 SetIncludeOverhead ";
   include_overhead_ = true;
   packet_queue_.SetIncludeOverhead();
 }
 
 void PacingController::SetTransportOverhead(DataSize overhead_per_packet) {
+  RTC_LOG(LS_WARNING)<<" hua2 SetTransportOverhead  overpack " << ToLogString(overhead_per_packet);
   if (ignore_transport_overhead_)
     return;
   transport_overhead_per_packet_ = overhead_per_packet;
@@ -305,6 +308,7 @@ void PacingController::EnqueuePacketInternal(
     // If queue is empty, we need to "fast-forward" the last process time,
     // so that we don't use passed time as budget for sending the first new
     // packet.
+    RTC_LOG(LS_WARNING)<<" hua2 EnqueuePacketInternal packet queue is empty";
     Timestamp target_process_time = now;
     Timestamp next_send_time = NextSendTime();
     if (next_send_time.IsFinite()) {
@@ -328,6 +332,7 @@ TimeDelta PacingController::UpdateTimeAndGetElapsed(Timestamp now) {
   }
   RTC_DCHECK_GE(now, last_process_time_);
   TimeDelta elapsed_time = now - last_process_time_;
+  //RTC_LOG(LS_WARNING)<<"hua2 UpdateTimeAndGetElapsed elapsed_time " << ToLogString(elapsed_time) << " now = " << ToLogString(now) << " last_process_time_ " << ToLogString(last_process_time_);
   last_process_time_ = now;
   if (elapsed_time > kMaxElapsedTime) {
     RTC_LOG(LS_WARNING) << "Elapsed time (" << elapsed_time.ms()
@@ -353,6 +358,7 @@ bool PacingController::ShouldSendKeepalive(Timestamp now) const {
 
 Timestamp PacingController::NextSendTime() const {
   const Timestamp now = CurrentTime();
+  //**RTC_LOG(LS_WARNING)<<"hua2 NextSendTime now "<< ToLogString(now); //NextSendTime
   //hua2 暂停状态，+500ms
   if (paused_) {
     return last_send_time_ + kPausedProcessInterval;
@@ -362,7 +368,7 @@ Timestamp PacingController::NextSendTime() const {
   //hua2 探测的话，探测为主
   if (prober_.is_probing()) {    
     Timestamp probe_time = prober_.NextProbeTime(now);
-    RTC_LOG(LS_WARNING)<<"songhua2 probing " << ToLogString(probe_time);
+     RTC_LOG(LS_WARNING)<< " hua2 NextSendTime probing " << ToLogString(probe_time) << " now " <<ToLogString(now);
     // `probe_time` == PlusInfinity indicates no probe scheduled.
     if (probe_time != Timestamp::PlusInfinity() && !probing_send_failure_) {
       return probe_time;
@@ -394,7 +400,13 @@ Timestamp PacingController::NextSendTime() const {
 
   // Check how long until we can send the next media packet.
   //hua2 码率非0，那么下一次时间 就是(+500，需要发送的debt的时间)，取小
+  /*
+  RTC_LOG(LS_WARNING)<<"hua2 NextSendTime() next send time last_send_time_ " << ToLogString(last_send_time_) << " last_process_time_ " << ToLogString(last_process_time_);
+  RTC_LOG(LS_WARNING)<<" hua2 NextSendTime() next send time media_debt " << ToLogString(media_debt_) << " media_rate_ " << ToLogString(media_rate_);
+  */
+  //hua2 most importtant which dyna mode which return next time
   if (media_rate_ > DataRate::Zero() && !packet_queue_.Empty()) {
+    //**RTC_LOG(LS_WARNING)<<"hua2 =NextSendTime()========last_process_time_ + media_debt_ / media_rate_ "<<ToLogString(last_process_time_ + media_debt_ / media_rate_);
     return std::min(last_send_time_ + kPausedProcessInterval,
                     last_process_time_ + media_debt_ / media_rate_);
   }
@@ -419,9 +431,10 @@ Timestamp PacingController::NextSendTime() const {
 void PacingController::ProcessPackets() {
   Timestamp now = CurrentTime();
   Timestamp target_send_time = now;
+  RTC_LOG(LS_WARNING)<< "hua2 ProcessPackets() now ="<< ToLogString(now);
   if (mode_ == ProcessMode::kDynamic) {
     target_send_time = NextSendTime();//target_send_time is now or now + <1ms or less now
-    RTC_LOG(LS_WARNING)<< "songhua2 target_send_time " << ToLogString(target_send_time) << "delta = " << ToLogString(target_send_time-now) << " pace_audio_ " << pace_audio_ << " send_padding_if_silent_ " << send_padding_if_silent_;
+    //**RTC_LOG(LS_WARNING)<<" target_send_time " << ToLogString(target_send_time) << "delta = " << ToLogString(target_send_time-now);
     TimeDelta early_execute_margin =
         prober_.is_probing() ? kMaxEarlyProbeProcessing : TimeDelta::Zero();//hua2 1ms
     if (target_send_time.IsMinusInfinity()) {
@@ -449,10 +462,10 @@ void PacingController::ProcessPackets() {
       target_send_time = last_process_time_;
     }
   }
-
+  //**RTC_LOG(LS_WARNING)<< "songhua2 ProcessPackets() last_process_time_  ="<< ToLogString(last_process_time_) ;
   Timestamp previous_process_time = last_process_time_;
   TimeDelta elapsed_time = UpdateTimeAndGetElapsed(now);
-
+  //RTC_LOG(LS_WARNING)<<" hua2 processpackets elapsed_time " << ToLogString(elapsed_time);
   if (ShouldSendKeepalive(now)) {
     // We can not send padding unless a normal packet has first been sent. If
     // we do, timestamps get messed up.
@@ -536,6 +549,8 @@ void PacingController::ProcessPackets() {
     if (first_packet_in_probe) {
       // If first packet in probe, insert a small padding packet so we have a
       // more reliable start window for the rate estimation.
+      
+      //hua2 generate padding
       auto padding = packet_sender_->GeneratePadding(DataSize::Bytes(1));
       // If no RTP modules sending media are registered, we may not get a
       // padding packet back.
@@ -548,7 +563,7 @@ void PacingController::ProcessPackets() {
       }
       first_packet_in_probe = false;
     }
-
+    //RTC_LOG(LS_WARNING)<<" hua2 before sendpacket";
     if (mode_ == ProcessMode::kDynamic &&
         previous_process_time < target_send_time) {
       // Reduce buffer levels with amount corresponding to time between last
@@ -567,7 +582,9 @@ void PacingController::ProcessPackets() {
     if (rtp_packet == nullptr) {
       // No packet available to send, check if we should send padding.
       //hua2 如果队列没有包了，但是probe size还没有够，那么就加点padding包
+      //RTC_LOG(LS_WARNING)<<"hua2 processpacket recommended_probe_size " << ToLogString(recommended_probe_size) << "data sent "<<ToLogString(data_sent);
       DataSize padding_to_add = PaddingToAdd(recommended_probe_size, data_sent);
+      //RTC_LOG(LS_WARNING)<<"hua2 processpacket padding_to_add " + ToLogString(padding_to_add);
       if (padding_to_add > DataSize::Zero()) {
         std::vector<std::unique_ptr<RtpPacketToSend>> padding_packets =
             packet_sender_->GeneratePadding(padding_to_add);
@@ -581,7 +598,7 @@ void PacingController::ProcessPackets() {
         // Continue loop to send the padding that was just added.
         continue;
       }
-
+      RTC_LOG(LS_WARNING)<<"hua2 processpacket no more packet for this loop";
       // Can't fetch new packet and no padding to send, exit send loop.
       break;
     }
@@ -599,18 +616,20 @@ void PacingController::ProcessPackets() {
     }
 
     packet_sender_->SendPacket(std::move(rtp_packet), pacing_info);
-    //hua2 need to check fec TODO
+    //hua2 need to check fec 
     for (auto& packet : packet_sender_->FetchFec()) {
       EnqueuePacket(std::move(packet));
     }
+    //RTC_LOG(LS_WARNING)<<"hua2 SendPacket after";
     data_sent += packet_size;
-
+   //** RTC_LOG(LS_WARNING)<< "hua2 222222 ProcessPackets() now ="<< ToLogString(now) << " target_send_time " << ToLogString(target_send_time) << "delta = " << ToLogString(target_send_time-now);
     // Send done, update send/process time to the target send time.
     OnPacketSent(packet_type, packet_size, target_send_time);
 
     // If we are currently probing, we need to stop the send loop when we have
     // reached the send target.
     if (is_probing && data_sent >= recommended_probe_size) {
+      RTC_LOG(LS_WARNING)<<"hua2 data_sent " <<ToLogString(data_sent) << " recommended_probe_size " << ToLogString(recommended_probe_size);
       break;
     }
 
@@ -697,18 +716,20 @@ std::unique_ptr<RtpPacketToSend> PacingController::GetPendingPacket(
       }
     } else {
       // Dynamic processing mode.
+      //**RTC_LOG(LS_WARNING)<<"hua2 GetPendingPacket now " << ToLogString(now) << " target_send_time " << ToLogString(target_send_time) << "delta = " << ToLogString(target_send_time-now);
       if (now <= target_send_time) {
         // We allow sending slightly early if we think that we would actually
         // had been able to, had we been right on time - i.e. the current debt
         // is not more than would be reduced to zero at the target sent time.
         TimeDelta flush_time = media_debt_ / media_rate_;
+        //**RTC_LOG(LS_WARNING)<<"hua2 GetPendingPacket 222 flush_time " << ToLogString(flush_time);
         if (now + flush_time > target_send_time) {
           return nullptr;
         }
       }
     }
   }
-
+  RTC_LOG(LS_WARNING)<<"hua2 getpendingpacket pop data";
   return packet_queue_.Pop();
 }
 
@@ -742,12 +763,11 @@ void PacingController::UpdateBudgetWithElapsedTime(TimeDelta delta) {
     media_budget_.IncreaseBudget(delta.ms());
     padding_budget_.IncreaseBudget(delta.ms());
   } else {
-    RTC_LOG(LS_WARNING) << " hua2 delta " << ToLogString(delta) << " media_debt_ " << ToLogString(media_debt_);
+   // RTC_LOG(LS_WARNING) << " hua2 delta " << ToLogString(delta) << " media_debt_ " << ToLogString(media_debt_) << " media_rate " << ToLogString(media_rate_);
     media_debt_ -= std::min(media_debt_, media_rate_ * delta);//hua2 media_debt decrease delta time
-    RTC_LOG(LS_WARNING) << " hua2 delta " << ToLogString(delta) << " media_debt_ " << ToLogString(media_debt_);
-    RTC_LOG(LS_WARNING) << " hua2 padding_rate_ " << ToLogString(padding_rate_) << " padding_debt_ " << ToLogString(padding_debt_);
+    //RTC_LOG(LS_WARNING) << " hua2 delta " << ToLogString(delta) << " media_debt_ " << ToLogString(media_debt_);
     padding_debt_ -= std::min(padding_debt_, padding_rate_ * delta);
-    RTC_LOG(LS_WARNING) << " hua2 delta " << ToLogString(delta) << " media_debt_ " << ToLogString(padding_debt_);
+    
   }
 }
 

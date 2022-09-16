@@ -1417,7 +1417,7 @@ void Call::OnStartRateUpdate(DataRate start_rate) {
   RTC_DCHECK_RUN_ON(&send_transport_sequence_checker_);
   bitrate_allocator_->UpdateStartRate(start_rate.bps<uint32_t>());
 }
-
+//hua2 called from rtptransportsend
 void Call::OnTargetTransferRate(TargetTransferRate msg) {
   RTC_DCHECK_RUN_ON(&send_transport_sequence_checker_);
 

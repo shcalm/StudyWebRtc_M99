@@ -142,6 +142,7 @@ void LinkCapacityTracker::OnRateUpdate(absl::optional<DataRate> acknowledged,
     double alpha = delta.IsFinite() ? exp(-(delta / tracking_rate.Get())) : 0;
     capacity_estimate_bps_ = alpha * capacity_estimate_bps_ +
                              (1 - alpha) * acknowledged_target.bps<double>();
+                             //hua2 时间越近，越靠近上次估值，越远越靠近这次估计
   }
   last_link_capacity_update_ = at_time;
 }
@@ -535,6 +536,11 @@ void SendSideBandwidthEstimation::UpdateEstimate(Timestamp at_time) {
       //   If instead one would do: current_bitrate_ *= 1.08^(delta time),
       //   it would take over one second since the lower packet loss to achieve
       //   108kbps.
+      //hua2
+      //>  Fix logic around capping max bitrate increase at 8% per second. 
+      //Before it was only increasing once every 1 second and each increase would be as high as 8%. 
+      //If receiver blocks had a different interval before it would lose an update or waste an update slot and not ramp up as much as a 8% 
+      //(e.g. if RTCP received < 1 second).
       DataRate new_bitrate = DataRate::BitsPerSec(
           min_bitrate_history_.front().second.bps() * 1.08 + 0.5);
 

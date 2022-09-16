@@ -43,7 +43,7 @@ BitrateEstimator::BitrateEstimator(const WebRtcKeyValueConfig* key_value_config)
                             kMinRateWindowMs,
                             kMaxRateWindowMs),
       uncertainty_scale_("scale", 10.0),
-      uncertainty_scale_in_alr_("scale_alr", uncertainty_scale_),
+      uncertainty_scale_in_alr_("scale_alr", 50.0), //hua2 uncertainty_scale_),
       small_sample_uncertainty_scale_("scale_small", uncertainty_scale_),
       small_sample_threshold_("small_thresh", DataSize::Zero()),
       uncertainty_symmetry_cap_("symmetry_cap", DataRate::Zero()),
@@ -53,6 +53,7 @@ BitrateEstimator::BitrateEstimator(const WebRtcKeyValueConfig* key_value_config)
       bitrate_estimate_kbps_(-1.0f),
       bitrate_estimate_var_(50.0f) {
   // E.g WebRTC-BweThroughputWindowConfig/initial_window_ms:350,window_ms:250/
+  RTC_LOG(LS_WARNING)<<"hua2 key_value_config->Lookup(kBweThroughputWindowConfig) " << key_value_config->Lookup(kBweThroughputWindowConfig);
   ParseFieldTrial(
       {&initial_window_ms_, &noninitial_window_ms_, &uncertainty_scale_,
        &uncertainty_scale_in_alr_, &small_sample_uncertainty_scale_,
@@ -69,6 +70,7 @@ void BitrateEstimator::Update(Timestamp at_time, DataSize amount, bool in_alr) {
   if (bitrate_estimate_kbps_ < 0.f)
     rate_window_ms = initial_window_ms_.Get();
   bool is_small_sample = false;
+  //hua2 测量值
   float bitrate_sample_kbps = UpdateWindow(at_time.ms(), amount.bytes(),
                                            rate_window_ms, &is_small_sample);
   if (bitrate_sample_kbps < 0.0f)
@@ -91,25 +93,33 @@ void BitrateEstimator::Update(Timestamp at_time, DataSize amount, bool in_alr) {
   // current estimate. With low values of uncertainty_symmetry_cap_ we add more
   // uncertainty to increases than to decreases. For higher values we approach
   // symmetry.
+  //hua2 测量值的标准差
   float sample_uncertainty =
       scale * std::abs(bitrate_estimate_kbps_ - bitrate_sample_kbps) /
       (bitrate_estimate_kbps_ +
        std::min(bitrate_sample_kbps,
                 uncertainty_symmetry_cap_.Get().kbps<float>()));
-
+//hua2 测量值的方差
   float sample_var = sample_uncertainty * sample_uncertainty;
   // Update a bayesian estimate of the rate, weighting it lower if the sample
   // uncertainty is large.
   // The bitrate estimate uncertainty is increased with each update to model
   // that the bitrate changes over time.
+  //hua2 先验概率的方差
   float pred_bitrate_estimate_var = bitrate_estimate_var_ + 5.f;
+  //hua2 卡尔曼滤波
+  // xk = xk-1 + K（Zk-xk-1）
   bitrate_estimate_kbps_ = (sample_var * bitrate_estimate_kbps_ +
                             pred_bitrate_estimate_var * bitrate_sample_kbps) /
                            (sample_var + pred_bitrate_estimate_var);
+  //hua2 不能低于最小值
   bitrate_estimate_kbps_ =
       std::max(bitrate_estimate_kbps_, estimate_floor_.Get().kbps<float>());
+  RTC_LOG(LS_WARNING)<<" hua2 ack bitrate_estimate_kbps_ " << bitrate_estimate_kbps_ << " bitrate_sample_kbps " << bitrate_sample_kbps;
+  //hua2 更新预测值概率的方差
   bitrate_estimate_var_ = sample_var * pred_bitrate_estimate_var /
                           (sample_var + pred_bitrate_estimate_var);
+  //RTC_LOG(LS_WARNING)<<"hua2 BitrateEstimator bitrate_estimate_kbps_ " << bitrate_estimate_kbps_;
   BWE_TEST_LOGGING_PLOT(1, "acknowledged_bitrate", at_time.ms(),
                         bitrate_estimate_kbps_ * 1000);
 }
@@ -137,7 +147,7 @@ float BitrateEstimator::UpdateWindow(int64_t now_ms,
   float bitrate_sample = -1.0f;
   if (current_window_ms_ >= rate_window_ms) {
     *is_small_sample = sum_ < small_sample_threshold_->bytes();
-    bitrate_sample = 8.0f * sum_ / static_cast<float>(rate_window_ms);
+    bitrate_sample = 8.0f * sum_ / static_cast<float>(rate_window_ms);//hua2 rate_window_ms 的窗口内的
     current_window_ms_ -= rate_window_ms;
     sum_ = 0;
   }

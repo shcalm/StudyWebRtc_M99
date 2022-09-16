@@ -31,7 +31,7 @@ VCMTiming::VCMTiming(Clock* clock)
       codec_timer_(std::make_unique<VCMCodecTimer>()),
       render_delay_ms_(kDefaultRenderDelayMs),
       min_playout_delay_ms_(0),
-      max_playout_delay_ms_(10000),
+      max_playout_delay_ms_(50),//hua2 jitter buffer 
       jitter_delay_ms_(0),
       current_delay_ms_(0),
       prev_frame_timestamp_(0),

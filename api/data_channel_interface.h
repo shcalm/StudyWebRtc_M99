@@ -31,6 +31,7 @@ namespace webrtc {
 
 // C++ version of: https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannelinit
 // TODO(deadbeef): Use absl::optional for the "-1 if unset" things.
+//hua2 params for sctp
 struct DataChannelInit {
   // Deprecated. Reliability is assumed, and channel will be unreliable if
   // maxRetransmitTime or MaxRetransmits is set.

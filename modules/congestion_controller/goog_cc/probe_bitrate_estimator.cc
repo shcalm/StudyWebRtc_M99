@@ -66,7 +66,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
 
   EraseOldClusters(packet_feedback.receive_time);
 
-  AggregatedCluster* cluster = &clusters_[cluster_id];
+  AggregatedCluster* cluster = &clusters_[cluster_id];//hua2 if not exist,insert it in hashmap
 
   if (packet_feedback.sent_packet.send_time < cluster->first_send) {
     cluster->first_send = packet_feedback.sent_packet.send_time;
@@ -92,13 +92,13 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
 
   int min_probes =
       packet_feedback.sent_packet.pacing_info.probe_cluster_min_probes *
-      kMinReceivedProbesRatio;
+      kMinReceivedProbesRatio;//hua2 at least 4 packets
   DataSize min_size =
       DataSize::Bytes(
           packet_feedback.sent_packet.pacing_info.probe_cluster_min_bytes) *
-      kMinReceivedBytesRatio;
+      kMinReceivedBytesRatio;//hua2 0.8 * min bytes
   if (cluster->num_probes < min_probes || cluster->size_total < min_size)
-    return absl::nullopt;
+    return absl::nullopt;//hua2 too small to meet requirement
 
   TimeDelta send_interval = cluster->last_send - cluster->first_send;
   TimeDelta receive_interval = cluster->last_receive - cluster->first_receive;
@@ -123,7 +123,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   // send the last packet the size of the last sent packet should not be
   // included when calculating the send bitrate.
   RTC_DCHECK_GT(cluster->size_total, cluster->size_last_send);
-  DataSize send_size = cluster->size_total - cluster->size_last_send;
+  DataSize send_size = cluster->size_total - cluster->size_last_send;//hua2 不包括最后一个rtp包的大小。
   DataRate send_rate = send_size / send_interval;
 
   // Since the `receive_interval` does not include the time it takes to
@@ -134,7 +134,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   DataRate receive_rate = receive_size / receive_interval;
 
   double ratio = receive_rate / send_rate;
-  if (ratio > kMaxValidRatio) {
+  if (ratio > kMaxValidRatio) {//hua2 接收码率是发送码率的2倍
     RTC_LOG(LS_INFO) << "Probing unsuccessful, receive/send ratio too high"
                         " [cluster id: "
                      << cluster_id << "] [send: " << ToString(send_size)
@@ -170,6 +170,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
   // If we're receiving at significantly lower bitrate than we were sending at,
   // it suggests that we've found the true capacity of the link. In this case,
   // set the target bitrate slightly lower to not immediately overuse.
+  //hua2 接收的码率是发出的0.9
   if (receive_rate < kMinRatioForUnsaturatedLink * send_rate) {
     RTC_DCHECK_GT(send_rate, receive_rate);
     res = kTargetUtilizationFraction * receive_rate;
@@ -179,6 +180,7 @@ absl::optional<DataRate> ProbeBitrateEstimator::HandleProbeAndEstimateBitrate(
         std::make_unique<RtcEventProbeResultSuccess>(cluster_id, res.bps()));
   }
   estimated_data_rate_ = res;
+  RTC_LOG(LS_WARNING)<<"hua2 probe estimated_data_rate_ " << ToLogString(res);
   return estimated_data_rate_;
 }
 

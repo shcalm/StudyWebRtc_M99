@@ -37,7 +37,52 @@ static std::atomic<int> g_unique_id{0};
 int GenerateUniqueId() {
   return ++g_unique_id;
 }
-
+/*
+ *
+  template <class INTERNAL_CLASS>                         \
+  class DataChannelProxyWithInternal;                             \
+  typedef DataChannelProxyWithInternal<DataChannelInterface> DataChannelProxy;    \
+  template <class INTERNAL_CLASS>                         \
+  class DataChannelProxyWithInternal : public DataChannelInterface {      \
+   protected:                                             \
+    static constexpr char proxy_name_[] = #c "Proxy";     \
+    typedef DataChannelInterface C;                               \
+                                                          \
+   public:                                                \
+    const INTERNAL_CLASS* internal() const { return c_; } \
+    INTERNAL_CLASS* internal() { return c_; }
+ protected:                                                            \
+  DataChannelProxyWithInternal(rtc::Thread* primary_thread, INTERNAL_CLASS* c) \
+      : primary_thread_(primary_thread), c_(c) {}                      \
+ protected:                                            \
+  ~DataChannelProxyWithInternal() {                            \
+    MethodCall<DataChannelProxyWithInternal, void> call(       \
+        this, &DataChannelProxyWithInternal::DestroyInternal); \
+    call.Marshal(RTC_FROM_HERE, destructor_thread());  \
+  }                                                    \
+                                                       \
+ private:                                              \
+  void DestroyInternal() { c_ = nullptr; }             \
+  rtc::scoped_refptr<INTERNAL_CLASS> c_;
+public:                                                                   \
+  static rtc::scoped_refptr<DataChannelProxyWithInternal> Create(                  \
+      rtc::Thread* primary_thread, INTERNAL_CLASS* c) {                    \
+    return rtc::make_ref_counted<DataChannelProxyWithInternal>(primary_thread, c); \
+  }
+   private:                                                            \
+  rtc::Thread* destructor_thread() const { return primary_thread_; } \
+                                                                     \
+ public:  // NOLINTNEXTLINE
+   void RegisterObserver(DataChannelObserver* a1) override {                                  \
+    TRACE_BOILERPLATE(method);                                \
+    MethodCall<C, r, t1> call(c_, &C::method, std::move(a1)); \
+    return call.Marshal(RTC_FROM_HERE, primary_thread_);      \
+  }
+  };                              \
+  template <class INTERNAL_CLASS> \
+  constexpr char DataChannelProxyWithInternal<INTERNAL_CLASS>::proxy_name_[];
+*
+*/
 // Define proxy for DataChannelInterface.
 BEGIN_PRIMARY_PROXY_MAP(DataChannel)
 PROXY_PRIMARY_THREAD_DESTRUCTOR()
@@ -73,7 +118,7 @@ InternalDataChannelInit::InternalDataChannelInit(const DataChannelInit& base)
     : DataChannelInit(base), open_handshake_role(kOpener) {
   // If the channel is externally negotiated, do not send the OPEN message.
   if (base.negotiated) {
-    open_handshake_role = kNone;
+    open_handshake_role = kNone;//hua2 handshake 
   } else {
     // Datachannel is externally negotiated. Ignore the id value.
     // Specified in createDataChannel, WebRTC spec section 6.1 bullet 13.
@@ -102,7 +147,7 @@ InternalDataChannelInit::InternalDataChannelInit(const DataChannelInit& base)
     }
   }
 }
-
+//hua2 sid = stream id at most is 1024
 bool SctpSidAllocator::AllocateSid(rtc::SSLRole role, int* sid) {
   int potential_sid = (role == rtc::SSL_CLIENT) ? 0 : 1;
   while (!IsSidAvailable(potential_sid)) {
@@ -141,7 +186,7 @@ bool SctpSidAllocator::IsSidAvailable(int sid) const {
 }
 
 rtc::scoped_refptr<SctpDataChannel> SctpDataChannel::Create(
-    SctpDataChannelProviderInterface* provider,
+    SctpDataChannelProviderInterface* provider,//DataChannelController
     const std::string& label,
     const InternalDataChannelInit& config,
     rtc::Thread* signaling_thread,
@@ -195,7 +240,7 @@ bool SctpDataChannel::Init() {
         << "maxRetransmits and maxRetransmitTime should not be both set.";
     return false;
   }
-
+//hua2 sctop negotiation
   switch (config_.open_handshake_role) {
     case webrtc::InternalDataChannelInit::kNone:  // pre-negotiated
       handshake_state_ = kHandshakeReady;
@@ -367,7 +412,7 @@ void SctpDataChannel::OnClosingProcedureComplete(int sid) {
 void SctpDataChannel::OnTransportChannelCreated() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   if (!connected_to_provider_) {
-    connected_to_provider_ = provider_->ConnectDataChannel(this);
+    connected_to_provider_ = provider_->ConnectDataChannel(this);//hua2 connect datachannelcontroller and sctpdatachannel
   }
   // The sid may have been unassigned when provider_->ConnectDataChannel was
   // done. So always add the streams even if connected_to_provider_ is true.
@@ -656,7 +701,7 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
 
   return false;
 }
-
+//hua2 queue size max is 16MB
 bool SctpDataChannel::QueueSendDataMessage(const DataBuffer& buffer) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   size_t start_buffered_amount = queued_send_data_.byte_count();

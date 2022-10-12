@@ -38,6 +38,7 @@ AlrDetectorConfig GetConfigFromTrials(
   }
   AlrDetectorConfig conf;
   if (experiment_settings) {
+    RTC_LOG(LS_WARNING)<<"hua2 experiment_settings " << experiment_settings->alr_start_budget_level_percent;
     conf.bandwidth_usage_ratio =
         experiment_settings->alr_bandwidth_usage_percent / 100.0;
     conf.start_budget_level_ratio =
@@ -47,6 +48,8 @@ AlrDetectorConfig GetConfigFromTrials(
   }
   conf.Parser()->Parse(
       key_value_config->Lookup("WebRTC-AlrDetectorParameters"));
+  RTC_LOG(LS_WARNING)<<"hua2 alr start_budget_level_ratio " << conf.start_budget_level_ratio;
+  RTC_LOG(LS_WARNING)<<"hua2 alr stop_budget_level_ratio " << conf.stop_budget_level_ratio;
   return conf;
 }
 }  //  namespace
@@ -82,17 +85,21 @@ void AlrDetector::OnBytesSent(size_t bytes_sent, int64_t send_time_ms) {
   alr_budget_.UseBudget(bytes_sent);
   alr_budget_.IncreaseBudget(delta_time_ms);
   bool state_changed = false;
+  //
+
   //hua2 如果发送的数据小于20%，那么就是alr state，需要重新探测带宽
   if (alr_budget_.budget_ratio() > conf_.start_budget_level_ratio &&
       !alr_started_time_ms_) {
     alr_started_time_ms_.emplace(rtc::TimeMillis());
     state_changed = true;
     RTC_LOG(LS_WARNING)<<"hua2 alr start ";
+    RTC_LOG(LS_WARNING)<<"hua2 alr budget_ratio " << alr_budget_.budget_ratio();
   } else if (alr_budget_.budget_ratio() < conf_.stop_budget_level_ratio &&//hua2 如果发送的数据占比大于50%，那么alr state结束
              alr_started_time_ms_) {
     state_changed = true;
     alr_started_time_ms_.reset();
     RTC_LOG(LS_WARNING)<<"hua2 alr end ";
+    RTC_LOG(LS_WARNING)<<"hua2 alr budget_ratio " << alr_budget_.budget_ratio();
   }
   if (event_log_ && state_changed) {
     event_log_->Log(

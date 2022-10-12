@@ -321,7 +321,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   FieldTrialParameter<DataRate> start_bandwidth("start",
                                                 DataRate::KilobitsPerSec(300 * 20));
   FieldTrialParameter<DataRate> max_bandwidth("max",
-                                              DataRate::KilobitsPerSec(2000));
+                                              DataRate::KilobitsPerSec(2000 * 20));
   ParseFieldTrial({&min_bandwidth, &start_bandwidth, &max_bandwidth},
                   trials().Lookup("WebRTC-PcFactoryDefaultBitrates"));
   RTC_LOG(LS_WARNING)<< "hua2 start bitrate " << start_bandwidth->bps();

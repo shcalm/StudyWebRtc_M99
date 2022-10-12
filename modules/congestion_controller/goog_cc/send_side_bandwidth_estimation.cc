@@ -37,7 +37,7 @@ constexpr TimeDelta kBweDecreaseInterval = TimeDelta::Millis(300);
 constexpr TimeDelta kStartPhase = TimeDelta::Millis(2000);
 constexpr TimeDelta kBweConverganceTime = TimeDelta::Millis(20000);
 constexpr int kLimitNumPackets = 20;
-constexpr DataRate kDefaultMaxBitrate = DataRate::BitsPerSec(1000000000);
+constexpr DataRate kDefaultMaxBitrate = DataRate::BitsPerSec(1000000000);//hua2 1gbps
 constexpr TimeDelta kLowBitrateLogPeriod = TimeDelta::Millis(10000);
 constexpr TimeDelta kRtcEventLogPeriod = TimeDelta::Millis(5000);
 // Expecting that RTCP feedback is sent uniformly within [0.5, 1.5]s intervals.
@@ -356,7 +356,7 @@ void SendSideBandwidthEstimation::SetAcknowledgedRate(
         *acknowledged_rate);
   }
 }
-
+//hua2 for new loss estimation,but now is not available
 void SendSideBandwidthEstimation::IncomingPacketFeedbackVector(
     const TransportPacketsFeedback& report) {
   if (LossBasedBandwidthEstimatorV1Enabled()) {
@@ -623,9 +623,13 @@ void SendSideBandwidthEstimation::UpdateMinHistory(Timestamp at_time) {
 }
 
 DataRate SendSideBandwidthEstimation::GetUpperLimit() const {
-  DataRate upper_limit = delay_based_limit_;
-  if (disable_receiver_limit_caps_only_)
+  DataRate upper_limit = delay_based_limit_;//hua2 ignore delaybased delay_based_limit_;
+  //RTC_LOG(LS_WARNING)<<"hua2 GetUpperLimit delay_based_limit_ "<< ToLogString(upper_limit);
+  if (disable_receiver_limit_caps_only_){//hua2 false
+    //RTC_LOG(LS_WARNING)<<"hua2 GetUpperLimit receiver_limit_ "<< ToLogString(receiver_limit_);
     upper_limit = std::min(upper_limit, receiver_limit_);
+  }
+  //RTC_LOG(LS_WARNING)<<"hua2 GetUpperLimit max_bitrate_configured_ "<< ToLogString(max_bitrate_configured_);
   return std::min(upper_limit, max_bitrate_configured_);
 }
 
@@ -654,12 +658,14 @@ void SendSideBandwidthEstimation::MaybeLogLossBasedEvent(Timestamp at_time) {
 
 void SendSideBandwidthEstimation::UpdateTargetBitrate(DataRate new_bitrate,
                                                       Timestamp at_time) {
+  //RTC_LOG(LS_WARNING)<<" hua2 sendside UpdateTargetBitrate new_bitrate " << ToLogString(new_bitrate);                                       
   new_bitrate = std::min(new_bitrate, GetUpperLimit());
   if (new_bitrate < min_bitrate_configured_) {
     MaybeLogLowBitrateWarning(new_bitrate, at_time);
     new_bitrate = min_bitrate_configured_;
   }
   current_target_ = new_bitrate;
+  //RTC_LOG(LS_WARNING)<<" hua2 sendside UpdateTargetBitrate current_target_ " << ToLogString(current_target_);
   MaybeLogLossBasedEvent(at_time);
   link_capacity_.OnRateUpdate(acknowledged_rate_, current_target_, at_time);
 }

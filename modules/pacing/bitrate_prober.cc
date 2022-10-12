@@ -37,7 +37,7 @@ BitrateProberConfig::BitrateProberConfig(
     : min_probe_packets_sent("min_probe_packets_sent", 5),
       min_probe_delta("min_probe_delta", TimeDelta::Millis(1)),
       min_probe_duration("min_probe_duration", TimeDelta::Millis(15)),
-      max_probe_delay("max_probe_delay", TimeDelta::Millis(20)),
+      max_probe_delay("max_probe_delay", TimeDelta::Millis(20)),//hua2 origin is 10ms
       abort_delayed_probes("abort_delayed_probes", true) {
         RTC_LOG(LS_WARNING)<<"hua2 ProbingConfiguration " << key_value_config->Lookup("WebRTC-Bwe-ProbingConfiguration");
         RTC_LOG(LS_WARNING)<<"hua2 ProbingBehavior " << key_value_config->Lookup("WebRTC-Bwe-ProbingBehavior");

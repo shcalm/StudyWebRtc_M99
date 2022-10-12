@@ -288,6 +288,8 @@ NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(
   if (msg.requests_alr_probing) {
     probe_controller_->EnablePeriodicAlrProbing(*msg.requests_alr_probing);
   }
+  if(msg.max_total_allocated_bitrate)
+      RTC_LOG(LS_WARNING)<<"hua2 OnStreamsConfig " << ToLogString(*msg.max_total_allocated_bitrate);
   if (msg.max_total_allocated_bitrate &&
       *msg.max_total_allocated_bitrate != max_total_allocated_bitrate_) {
     if (rate_control_settings_.TriggerProbeOnMaxAllocatedBitrateChange()) {
@@ -301,6 +303,7 @@ NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(
   }
   bool pacing_changed = false;
   if (msg.pacing_factor && *msg.pacing_factor != pacing_factor_) {
+    RTC_LOG(LS_WARNING)<<"hua2 OnStreamsConfig " << *msg.pacing_factor;
     pacing_factor_ = *msg.pacing_factor;
     pacing_changed = true;
   }
@@ -366,7 +369,7 @@ std::vector<ProbeClusterConfig> GoogCcNetworkController::ResetConstraints(
   if (starting_rate_)
     delay_based_bwe_->SetStartBitrate(*starting_rate_);
   delay_based_bwe_->SetMinBitrate(min_data_rate_);
-
+  RTC_LOG(LS_WARNING)<<"hua2 ResetConstraints max_data_rate_ " << ToLogString(max_data_rate_);
   return probe_controller_->SetBitrates(
       min_data_rate_.bps(), GetBpsOrDefault(starting_rate_, -1),
       max_data_rate_.bps_or(-1), new_constraints.at_time.ms());

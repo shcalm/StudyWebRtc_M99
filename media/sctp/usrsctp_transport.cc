@@ -895,7 +895,7 @@ bool UsrsctpTransport::Connect() {
   SetReadyToSendData();
   return true;
 }
-
+//hua2 using usrsctp lib with dtlstranport 
 bool UsrsctpTransport::OpenSctpSocket() {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (sock_) {
@@ -1134,7 +1134,7 @@ bool UsrsctpTransport::SendBufferedMessage() {
 
   return true;
 }
-
+//hua2 from transport signal
 void UsrsctpTransport::OnWritableState(
     rtc::PacketTransportInternal* transport) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -1148,6 +1148,7 @@ void UsrsctpTransport::OnWritableState(
 }
 
 // Called by network interface when a packet has been received.
+//hua2 from dtlstransport 
 void UsrsctpTransport::OnPacketRead(rtc::PacketTransportInternal* transport,
                                     const char* data,
                                     size_t len,
@@ -1343,7 +1344,7 @@ void UsrsctpTransport::OnDataOrNotificationFromSctp(const void* data,
   OnDataFromSctpToTransport(params, partial_incoming_message_);
   partial_incoming_message_.Clear();
 }
-
+//hua2 this transport is sctp_transport_channel
 void UsrsctpTransport::OnDataFromSctpToTransport(
     const ReceiveDataParams& params,
     const rtc::CopyOnWriteBuffer& buffer) {
@@ -1356,7 +1357,7 @@ void UsrsctpTransport::OnDataFromSctpToTransport(
   // is known.
   SignalDataReceived(params, buffer);
 }
-
+//
 void UsrsctpTransport::OnNotificationFromSctp(
     const rtc::CopyOnWriteBuffer& buffer) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -1377,6 +1378,11 @@ void UsrsctpTransport::OnNotificationFromSctp(
 
   // TODO(ldixon): handle notifications appropriately.
   switch (notification.sn_header.sn_type) {
+    /*
+    Communication notifications inform the ULP that an SCTP association
+   has either begun or ended. The identifier for a new association is
+   provided by this notificaion. 
+    */
     case SCTP_ASSOC_CHANGE:
       RTC_LOG(LS_VERBOSE) << "SCTP_ASSOC_CHANGE";
       if (buffer.size() < sizeof(notification.sn_assoc_change)) {
@@ -1402,6 +1408,11 @@ void UsrsctpTransport::OnNotificationFromSctp(
     case SCTP_AUTHENTICATION_EVENT:
       RTC_LOG(LS_INFO) << "SCTP_AUTHENTICATION_EVENT";
       break;
+    /* When the SCTP stack has no more user data to send or retransmit, this
+    * notification is given to the user. Also, at the time when a user app
+    * subscribes to this event, if there is no data to be sent or
+    * retransmit, the stack will immediately send up this notification.
+  */
     case SCTP_SENDER_DRY_EVENT:
       RTC_LOG(LS_VERBOSE) << "SCTP_SENDER_DRY_EVENT";
       SetReadyToSendData();

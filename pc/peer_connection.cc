@@ -2852,7 +2852,7 @@ PeerConnectionObserver* PeerConnection::Observer() const {
   RTC_DCHECK(observer_);
   return observer_;
 }
-
+//hua2 from PushdownMediaDescription sdp
 void PeerConnection::StartSctpTransport(int local_port,
                                         int remote_port,
                                         int max_message_size) {

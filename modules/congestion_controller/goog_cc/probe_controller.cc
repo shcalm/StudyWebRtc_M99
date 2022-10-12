@@ -196,6 +196,7 @@ std::vector<ProbeClusterConfig> ProbeController::SetBitrates(
 std::vector<ProbeClusterConfig> ProbeController::OnMaxTotalAllocatedBitrate(
     int64_t max_total_allocated_bitrate,
     int64_t at_time_ms) {
+  RTC_LOG(LS_WARNING)<<"hua2 OnMaxTotalAllocatedBitrate ";
   const bool in_alr = alr_start_time_ms_.has_value();
   const bool allow_allocation_probe = in_alr;
 
@@ -350,6 +351,7 @@ std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
 }
 
 void ProbeController::SetMaxBitrate(int64_t max_bitrate_bps) {
+  RTC_LOG(LS_WARNING)<<"hua2 SetMaxBitrate ";
   max_bitrate_bps_ = max_bitrate_bps;
 }
 
@@ -408,6 +410,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
   //hua2 now probe default max bitrate is 5000kbps，which should be more in near scense TODO
   int64_t max_probe_bitrate_bps =
       max_bitrate_bps_ > 0 ? max_bitrate_bps_ : kDefaultMaxProbingBitrateBps;
+  RTC_LOG(LS_WARNING)<<"hua2 probe max_bitrate_bps_ " << max_bitrate_bps_;
   if (limit_probes_with_allocateable_rate_ &&
       max_total_allocated_bitrate_ > 0) {
     // If a max allocated bitrate has been configured, allow probing up to 2x
@@ -416,6 +419,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     // progress.
     // It also avoids minor quality reduction caused by probes often being
     // received at slightly less than the target probe bitrate.
+    RTC_LOG(LS_WARNING)<<"hua2 probe max_total_allocated_bitrate_ " << max_total_allocated_bitrate_;
     max_probe_bitrate_bps =
         std::min(max_probe_bitrate_bps, max_total_allocated_bitrate_ * 2);
   }
@@ -424,7 +428,7 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
   std::vector<ProbeClusterConfig> pending_probes;
   for (int64_t bitrate : bitrates_to_probe) {
     RTC_DCHECK_GT(bitrate, 0);
-    RTC_LOG(LS_WARNING)<<"hua2 bitrate  "<< bitrate;
+    RTC_LOG(LS_WARNING)<<"hua2 probe bitrate  "<< bitrate << "max_probe_bitrate_bps " << max_probe_bitrate_bps;
     if (bitrate > max_probe_bitrate_bps) {
       bitrate = max_probe_bitrate_bps;
       probe_further = false;

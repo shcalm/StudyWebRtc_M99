@@ -24,7 +24,7 @@ const char AlrExperimentSettings::kScreenshareProbingBweExperimentName[] =
     "WebRTC-ProbingScreenshareBwe";
 const char AlrExperimentSettings::kStrictPacingAndProbingExperimentName[] =
     "WebRTC-StrictPacingAndProbing";
-const char kDefaultProbingScreenshareBweSettings[] = "1.0,2875,80,40,-60,3";
+const char kDefaultProbingScreenshareBweSettings[] = "1.0,2875,80,40,-60,3";//hua2 change to 2.5
 
 bool AlrExperimentSettings::MaxOneFieldTrialEnabled() {
   return AlrExperimentSettings::MaxOneFieldTrialEnabled(

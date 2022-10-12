@@ -1008,7 +1008,7 @@ cricket::JsepTransport* JsepTransportController::GetJsepTransportByName(
     const std::string& transport_name) {
   return transports_.GetTransportByName(transport_name);
 }
-
+//hua2 very important function
 RTCError JsepTransportController::MaybeCreateJsepTransport(
     bool local,
     const cricket::ContentInfo& content_info,

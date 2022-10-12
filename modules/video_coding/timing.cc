@@ -247,7 +247,7 @@ int VCMTiming::TargetDelayInternal() const {
   return std::max(min_playout_delay_ms_,
                   jitter_delay_ms_ + RequiredDecodeTimeMs() + render_delay_ms_);
 }
-
+//hua2 note for time calc
 bool VCMTiming::GetTimings(int* max_decode_ms,
                            int* current_delay_ms,
                            int* target_delay_ms,

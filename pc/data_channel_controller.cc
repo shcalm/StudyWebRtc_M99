@@ -399,7 +399,7 @@ bool DataChannelController::DataChannelSendData(
   RTCError error = network_thread()->Invoke<RTCError>(
       RTC_FROM_HERE, [this, sid, params, payload] {
         return data_channel_transport()->SendData(sid, params, payload);
-      });
+      });//hua2 sync method call
 
   if (error.ok()) {
     *result = cricket::SendDataResult::SDR_SUCCESS;

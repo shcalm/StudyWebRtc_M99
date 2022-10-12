@@ -53,14 +53,18 @@ class DataChannelController : public SctpDataChannelProviderInterface,
 
   // Implements
   // SctpDataChannelProviderInterface.
+  //hua2 interface for data channel
   bool SendData(int sid,
                 const SendDataParams& params,
                 const rtc::CopyOnWriteBuffer& payload,
                 cricket::SendDataResult* result) override;
+  //hua2 signal slot to connect transport and datachannel
   bool ConnectDataChannel(SctpDataChannel* webrtc_data_channel) override;
   void DisconnectDataChannel(SctpDataChannel* webrtc_data_channel) override;
+  //hua2 add sid to usrsctptransport
   void AddSctpDataStream(int sid) override;
   void RemoveSctpDataStream(int sid) override;
+  //hua2 check if stack is available to send data
   bool ReadyToSendData() const override;
 
   // Implements DataChannelSink.
@@ -69,6 +73,7 @@ class DataChannelController : public SctpDataChannelProviderInterface,
                       const rtc::CopyOnWriteBuffer& buffer) override;
   void OnChannelClosing(int channel_id) override;
   void OnChannelClosed(int channel_id) override;
+  //hua2 when stack is available to send data,this notification will be notified
   void OnReadyToSend() override;
   void OnTransportClosed(RTCError error) override;
 
@@ -79,6 +84,7 @@ class DataChannelController : public SctpDataChannelProviderInterface,
 
   // Called from PeerConnection::OnTransportChanged
   // to make required changes to datachannels' transports.
+  //hua2 sctp_transport changed
   void OnTransportChanged(
       DataChannelTransportInterface* data_channel_transport);
 

@@ -626,7 +626,7 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
     process_interval_ = controller_factory_override_->GetProcessInterval();
   } else {
     RTC_LOG(LS_INFO) << "Creating fallback congestion controller";
-    controller_ = controller_factory_fallback_->Create(initial_config_);
+    controller_ = controller_factory_fallback_->Create(initial_config_);//hua2 initial config
     process_interval_ = controller_factory_fallback_->GetProcessInterval();//hua2 25ms
   }
   UpdateControllerWithTimeInterval();
@@ -676,8 +676,12 @@ void RtpTransportControllerSend::UpdateStreamsConfig() {
   streams_config_.at_time = Timestamp::Millis(clock_->TimeInMilliseconds());
   if (controller_)
     PostUpdates(controller_->OnStreamsConfig(streams_config_));
+  if(streams_config_.max_total_allocated_bitrate)
+    RTC_LOG(LS_WARNING)<<"hua2 UpdateStreamsConfig stream_config " << ToLogString(*streams_config_.max_total_allocated_bitrate);
+  if(streams_config_.pacing_factor) 
+    RTC_LOG(LS_WARNING)<<"hua2  pacing_factor " <<*streams_config_.pacing_factor;
 }
-//hua2 update config 
+
 void RtpTransportControllerSend::PostUpdates(NetworkControlUpdate update) {
   if (update.congestion_window) {
     RTC_LOG(LS_WARNING)<< "hua2 postupdates congestion_window "<<ToLogString(*update.congestion_window);

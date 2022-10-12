@@ -549,7 +549,7 @@ bool RtpSenderEgress::SendPacketToNetwork(const RtpPacketToSend& packet,
                                           const PacketOptions& options,
                                           const PacedPacketInfo& pacing_info) {
   int bytes_sent = -1;
-  RTC_LOG(LS_WARNING)<<" hua2 SendPacketToNetwork packaet = " << packet.ToString() << " timestamp = " <<packet.Timestamp() ;
+//  RTC_LOG(LS_WARNING)<<" hua2 Egress SendPacketToNetwork packaet = " << packet.ToString() << " timestamp = " <<packet.Timestamp() ;
   if (transport_) {
     bytes_sent = transport_->SendRtp(packet.data(), packet.size(), options)
                      ? static_cast<int>(packet.size())

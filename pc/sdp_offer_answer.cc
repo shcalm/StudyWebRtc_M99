@@ -1465,7 +1465,7 @@ void SdpOfferAnswerHandler::SetLocalDescription(
         }
       });
 }
-
+//hua2 big function !!!
 RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
     std::unique_ptr<SessionDescriptionInterface> desc,
     const std::map<std::string, const cricket::ContentGroup*>&

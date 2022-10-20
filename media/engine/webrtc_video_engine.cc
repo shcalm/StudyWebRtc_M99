@@ -980,7 +980,7 @@ void WebRtcVideoChannel::RequestEncoderSwitch(
   RTC_LOG(LS_WARNING) << "Encoder switch failed: SdpVideoFormat "
                       << format.ToString() << " not negotiated.";
 }
-
+//hua2 this will change max bitrate 
 bool WebRtcVideoChannel::ApplyChangedParams(
     const ChangedSendParameters& changed_params) {
   RTC_DCHECK_RUN_ON(&thread_checker_);

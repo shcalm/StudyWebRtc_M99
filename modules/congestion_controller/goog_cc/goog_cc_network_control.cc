@@ -127,6 +127,10 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
       key_value_config_->Lookup("WebRTC-Bwe-SafeResetOnRouteChange"));
   if (delay_based_bwe_)
     delay_based_bwe_->SetMinBitrate(congestion_controller::GetMinBitrate());
+  if(config.constraints.max_data_rate){
+    RTC_LOG(LS_INFO)<<"hua2 info GoogCcNetworkController init max_data_rate " <<ToLogString(*config.constraints.max_data_rate);   
+  }
+  RTC_LOG(LS_INFO)<<"hua2 info GoogCcNetworkController init starting_rate " <<ToLogString(*config.constraints.starting_rate); 
 }
 
 GoogCcNetworkController::~GoogCcNetworkController() {}
@@ -137,7 +141,7 @@ NetworkControlUpdate GoogCcNetworkController::OnNetworkAvailability(
   update.probe_cluster_configs = probe_controller_->OnNetworkAvailability(msg);
   return update;
 }
-
+//hua2 check ResetConstraints from transport network route change
 NetworkControlUpdate GoogCcNetworkController::OnNetworkRouteChange(
     NetworkRouteChange msg) {
   if (safe_reset_on_route_change_) {
@@ -169,15 +173,17 @@ NetworkControlUpdate GoogCcNetworkController::OnNetworkRouteChange(
   bandwidth_estimation_->OnRouteChange();
   probe_controller_->Reset(msg.at_time.ms());
   NetworkControlUpdate update;
+  RTC_LOG(LS_INFO)<<"hua2 config OnNetworkRouteChange";
   update.probe_cluster_configs = ResetConstraints(msg.constraints);
   MaybeTriggerOnNetworkChanged(&update, msg.at_time);
   return update;
 }
-
+//hua2 check
 NetworkControlUpdate GoogCcNetworkController::OnProcessInterval(
     ProcessInterval msg) {
   NetworkControlUpdate update;
   if (initial_config_) {
+    RTC_LOG(LS_INFO)<<"hua2 config OnProcessInterval initial_config_ " ;
     update.probe_cluster_configs =
         ResetConstraints(initial_config_->constraints);
     update.pacer_config = GetPacingRates(msg.at_time);
@@ -289,7 +295,7 @@ NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(
     probe_controller_->EnablePeriodicAlrProbing(*msg.requests_alr_probing);
   }
   if(msg.max_total_allocated_bitrate)
-      RTC_LOG(LS_WARNING)<<"hua2 OnStreamsConfig " << ToLogString(*msg.max_total_allocated_bitrate);
+  RTC_LOG(LS_WARNING)<<"hua2 OnStreamsConfig " << ToLogString(*msg.max_total_allocated_bitrate);
   if (msg.max_total_allocated_bitrate &&
       *msg.max_total_allocated_bitrate != max_total_allocated_bitrate_) {
     if (rate_control_settings_.TriggerProbeOnMaxAllocatedBitrateChange()) {
@@ -327,10 +333,11 @@ NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(
     update.pacer_config = GetPacingRates(msg.at_time);
   return update;
 }
-
+//hua2 check
 NetworkControlUpdate GoogCcNetworkController::OnTargetRateConstraints(
     TargetRateConstraints constraints) {
   NetworkControlUpdate update;
+  RTC_LOG(LS_INFO)<<"hua2 OnTargetRateConstraints";
   update.probe_cluster_configs = ResetConstraints(constraints);
   MaybeTriggerOnNetworkChanged(&update, constraints.at_time);
   return update;
@@ -361,6 +368,7 @@ std::vector<ProbeClusterConfig> GoogCcNetworkController::ResetConstraints(
   max_data_rate_ =
       new_constraints.max_data_rate.value_or(DataRate::PlusInfinity());
   starting_rate_ = new_constraints.starting_rate;
+  RTC_LOG(LS_WARNING)<<"hua2 ResetConstraints max_data_rate_ " << ToLogString(max_data_rate_) << " min_target_rate_ " << ToLogString(min_target_rate_) << " starting_rate_ " << ToLogString(*starting_rate_);
   ClampConstraints();
 
   bandwidth_estimation_->SetBitrates(starting_rate_, min_data_rate_,

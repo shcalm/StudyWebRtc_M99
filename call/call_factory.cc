@@ -84,7 +84,7 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
       receive_degradation_config = ParseDegradationConfig(false);
 
   RtpTransportConfig transportConfig = config.ExtractTransportConfig();
-
+  RTC_LOG(LS_INFO) << "hua2 CreateCall " <<transportConfig.bitrate_config.max_bitrate_bps;
   if (send_degradation_config || receive_degradation_config) {
     return new DegradedCall(
         std::unique_ptr<Call>(Call::Create(

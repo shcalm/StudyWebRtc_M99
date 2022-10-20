@@ -137,6 +137,7 @@ RtpTransportControllerSend::RtpTransportControllerSend(
           TaskQueueFactory::Priority::NORMAL)) {
   ParseFieldTrial({&relay_bandwidth_cap_},
                   trials->Lookup("WebRTC-Bwe-NetworkRouteConstraints"));
+  RTC_LOG(LS_INFO)<<"hua2 bitrate_config " << bitrate_config.max_bitrate_bps;
   initial_config_.constraints = ConvertConstraints(bitrate_config, clock_);
   initial_config_.event_log = event_log;
   initial_config_.key_value_config = trials;
@@ -445,6 +446,7 @@ void RtpTransportControllerSend::OnReceivedPacket(
 
 void RtpTransportControllerSend::UpdateBitrateConstraints(
     const BitrateConstraints& updated) {
+  RTC_LOG(LS_INFO)<<"hua2 UpdateBitrateConstraints";
   TargetRateConstraints msg = ConvertConstraints(updated, clock_);
   task_queue_.PostTask([this, msg]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
@@ -458,6 +460,7 @@ void RtpTransportControllerSend::UpdateBitrateConstraints(
 
 void RtpTransportControllerSend::SetSdpBitrateParameters(
     const BitrateConstraints& constraints) {
+  RTC_LOG(LS_INFO)<<"hua2 SetSdpBitrateParameters " << constraints.max_bitrate_bps;
   absl::optional<BitrateConstraints> updated =
       bitrate_configurator_.UpdateWithSdpParameters(constraints);
   if (updated.has_value()) {
@@ -473,6 +476,8 @@ void RtpTransportControllerSend::SetClientBitratePreferences(
     const BitrateSettings& preferences) {
   absl::optional<BitrateConstraints> updated =
       bitrate_configurator_.UpdateWithClientPreferences(preferences);
+  if(updated)
+    RTC_LOG(LS_INFO)<<"hua2 SetClientBitratePreferences " << (*updated).max_bitrate_bps;
   if (updated.has_value()) {
     UpdateBitrateConstraints(*updated);
   } else {
@@ -617,6 +622,8 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
 
   initial_config_.constraints.at_time =
       Timestamp::Millis(clock_->TimeInMilliseconds());
+  if(initial_config_.constraints.max_data_rate)
+    RTC_LOG(LS_INFO)<<"hua2 info MaybeCreateControllers init max_data_rate " <<ToLogString(*initial_config_.constraints.max_data_rate);   
   initial_config_.stream_based_config = streams_config_;
 
   // TODO(srte): Use fallback controller if no feedback is available.
@@ -635,9 +642,13 @@ void RtpTransportControllerSend::MaybeCreateControllers() {
 
 void RtpTransportControllerSend::UpdateInitialConstraints(
     TargetRateConstraints new_contraints) {
+  RTC_LOG(LS_INFO)<<"hua2 info UpdateInitialConstraints ";
   if (!new_contraints.starting_rate)
     new_contraints.starting_rate = initial_config_.constraints.starting_rate;
   RTC_DCHECK(new_contraints.starting_rate);
+  if(new_contraints.max_data_rate){
+    RTC_LOG(LS_INFO)<< "hua2 UpdateInitialConstraints  max_data_rate " << ToLogString(*new_contraints.max_data_rate);
+  }
   initial_config_.constraints = new_contraints;
 }
 

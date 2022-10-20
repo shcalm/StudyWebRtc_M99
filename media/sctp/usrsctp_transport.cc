@@ -692,7 +692,7 @@ bool UsrsctpTransport::SendData(int sid,
                                 const rtc::CopyOnWriteBuffer& payload,
                                 SendDataResult* result) {
   RTC_DCHECK_RUN_ON(network_thread_);
-
+  //hua2 still message to send
   if (partial_outgoing_message_.has_value()) {
     if (result) {
       *result = SDR_BLOCK;
@@ -760,6 +760,7 @@ SendDataResult UsrsctpTransport::SendMessageInternal(OutgoingMessage* message) {
       return SDR_ERROR;
     }
   }
+  //hua2 size can't too large
   if (message->size() > static_cast<size_t>(max_message_size_)) {
     RTC_LOG(LS_ERROR) << "Attempting to send message of size "
                       << message->size() << " which is larger than limit "

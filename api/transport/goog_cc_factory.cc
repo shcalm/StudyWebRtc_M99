@@ -36,6 +36,8 @@ GoogCcNetworkControllerFactory::Create(NetworkControllerConfig config) {
     config.event_log = event_log_;
   GoogCcConfig goog_cc_config;
   goog_cc_config.feedback_only = factory_config_.feedback_only;
+  /*hua2 what below doing??
+  */
   if (factory_config_.network_state_estimator_factory) {
     RTC_DCHECK(config.key_value_config);
     goog_cc_config.network_state_estimator =
@@ -47,6 +49,7 @@ GoogCcNetworkControllerFactory::Create(NetworkControllerConfig config) {
         factory_config_.network_state_predictor_factory
             ->CreateNetworkStatePredictor();
   }
+  //end
   return std::make_unique<GoogCcNetworkController>(config,
                                                    std::move(goog_cc_config));
 }

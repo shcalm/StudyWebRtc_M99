@@ -384,7 +384,7 @@ void DataChannelController::set_data_channel_transport(
   RTC_DCHECK_RUN_ON(network_thread());
   data_channel_transport_ = transport;
 }
-
+//hua2 send data interface
 bool DataChannelController::DataChannelSendData(
     int sid,
     const SendDataParams& params,

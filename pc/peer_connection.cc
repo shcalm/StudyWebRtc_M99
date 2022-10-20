@@ -410,7 +410,8 @@ bool PeerConnectionInterface::RTCConfiguration::operator!=(
     const PeerConnectionInterface::RTCConfiguration& o) const {
   return !(*this == o);
 }
-
+//hua2 read this function line by line .....
+//TODO
 RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
     rtc::scoped_refptr<ConnectionContext> context,
     const PeerConnectionFactoryInterface::Options& options,

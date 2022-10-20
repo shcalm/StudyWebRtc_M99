@@ -203,11 +203,13 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
          "the former is going away (see bugs.webrtc.org/7447";
 
   // Set internal defaults if optional dependencies are not set.
+  //hua2 cert is not so familier
   if (!dependencies.cert_generator) {
     dependencies.cert_generator =
         std::make_unique<rtc::RTCCertificateGenerator>(signaling_thread(),
                                                        network_thread());
   }
+  //hua2 p2p
   if (!dependencies.allocator) {
     rtc::PacketSocketFactory* packet_socket_factory;
     if (dependencies.packet_socket_factory)
@@ -224,7 +226,7 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
     dependencies.allocator->set_flags(
         configuration.port_allocator_config.flags);
   }
-
+  //hua2 find ip from name
   if (!dependencies.async_resolver_factory) {
     dependencies.async_resolver_factory =
         std::make_unique<webrtc::BasicAsyncResolverFactory>();
@@ -303,11 +305,11 @@ std::unique_ptr<RtcEventLog> PeerConnectionFactory::CreateRtcEventLog_w() {
              ? event_log_factory_->CreateRtcEventLog(encoding_type)
              : std::make_unique<RtcEventLogNull>();
 }
-
+//hua2 many config come from here
 std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
     RtcEventLog* event_log) {
   RTC_DCHECK_RUN_ON(worker_thread());
-
+  RTC_LOG(LS_WARNING)<<"hua2 CreateCall_w";
   webrtc::Call::Config call_config(event_log, network_thread());
   if (!channel_manager()->media_engine() || !context_->call_factory()) {
     return nullptr;
@@ -324,6 +326,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
                                               DataRate::KilobitsPerSec(2000 * 20));
   ParseFieldTrial({&min_bandwidth, &start_bandwidth, &max_bandwidth},
                   trials().Lookup("WebRTC-PcFactoryDefaultBitrates"));
+  RTC_LOG(LS_WARNING)<< "hua2 PcFactoryDefaultBitrates trials " << trials().Lookup("WebRTC-PcFactoryDefaultBitrates"); 
   RTC_LOG(LS_WARNING)<< "hua2 start bitrate " << start_bandwidth->bps();
   
   call_config.bitrate_config.min_bitrate_bps =
@@ -346,7 +349,7 @@ std::unique_ptr<Call> PeerConnectionFactory::CreateCall_w(
   } else {
     RTC_LOG(LS_INFO) << "Using default network controller factory";
   }
-
+  RTC_LOG(LS_INFO)<<"hua2 call_config.bitrate_config.max_bitrate_bps " << call_config.bitrate_config.max_bitrate_bps ;
   call_config.trials = &trials();
   call_config.rtp_transport_controller_send_factory =
       transport_controller_send_factory_.get();

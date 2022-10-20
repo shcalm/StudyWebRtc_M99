@@ -793,7 +793,7 @@ Call::Call(Clock* clock,
       num_cpu_cores_(CpuInfo::DetectNumberOfCores()),
       module_process_thread_(std::move(module_process_thread)),
       call_stats_(new CallStats(clock_, worker_thread_)),
-      bitrate_allocator_(new BitrateAllocator(this)),
+      bitrate_allocator_(new BitrateAllocator(this)),//hua2
       config_(config),
       trials_(*config.trials),
       audio_network_state_(kNetworkDown),

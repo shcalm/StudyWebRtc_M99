@@ -330,7 +330,7 @@ std::vector<uint16_t> NackRequester::GetNackBatch(NackFilterOptions options) {
   auto it = nack_list_.begin();
   while (it != nack_list_.end()) {
     TimeDelta resend_delay = TimeDelta::Millis(rtt_ms_);
-    if (backoff_settings_) {
+    if (backoff_settings_) {//hua2 should set in field trials
       resend_delay =
           std::max(resend_delay, backoff_settings_->min_retry_interval);
       if (it->second.retries > 1) {
@@ -342,7 +342,7 @@ std::vector<uint16_t> NackRequester::GetNackBatch(NackFilterOptions options) {
     }
 
     bool delay_timed_out =
-        now.ms() - it->second.created_at_time >= send_nack_delay_ms_;
+        now.ms() - it->second.created_at_time >= send_nack_delay_ms_;//hua2 default is 0
     bool nack_on_rtt_passed =
         now.ms() - it->second.sent_at_time >= resend_delay.ms();
     bool nack_on_seq_num_passed =

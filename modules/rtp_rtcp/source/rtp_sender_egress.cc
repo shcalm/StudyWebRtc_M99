@@ -274,6 +274,7 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
 
   // Put packet in retransmission history or update pending status even if
   // actual sending fails.
+  //hua2 put rtp packet in history,nack need it @nack
   if (is_media && packet->allow_retransmission()) {
     packet_history_->PutRtpPacket(std::make_unique<RtpPacketToSend>(*packet),
                                   now_ms);

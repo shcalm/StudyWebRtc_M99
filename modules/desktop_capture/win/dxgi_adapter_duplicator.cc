@@ -87,7 +87,7 @@ bool DxgiAdapterDuplicator::DoInitialize() {
         }
 
         duplicators_.push_back(std::move(duplicator));
-        desktop_rect_.UnionWith(duplicators_.back().desktop_rect());
+        desktop_rect_.UnionWith(duplicators_.back().desktop_rect());//hua2 desktop_rect_ is all rect of all monitors
       } else {
         RTC_LOG(LS_ERROR) << (desc.AttachedToDesktop ? "Attached" : "Detached")
                           << " output " << i << " ("

@@ -22,7 +22,7 @@ VideoSinkWrapper::VideoSinkWrapper(JNIEnv* jni, const JavaRef<jobject>& j_sink)
 VideoSinkWrapper::~VideoSinkWrapper() {}
 
 void VideoSinkWrapper::OnFrame(const VideoFrame& frame) {
-  JNIEnv* jni = AttachCurrentThreadIfNeeded();
+  JNIEnv* jni = AttachCurrentThreadIfNeeded();//hua2 jvm
   ScopedJavaLocalRef<jobject> j_frame = NativeToJavaVideoFrame(jni, frame);
   Java_VideoSink_onFrame(jni, j_sink_, j_frame);
   ReleaseJavaVideoFrame(jni, j_frame);

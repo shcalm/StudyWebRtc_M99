@@ -515,7 +515,7 @@ class UsrsctpTransport::UsrSctpWrapper {
     }
     return kSctpSuccessReturn;
   }
-
+  //hua2 sctp have send buffer to send data
   static int SendThresholdCallback(struct socket* sock,
                                    uint32_t sb_free,
                                    void* ulp_info) {
@@ -940,7 +940,7 @@ bool UsrsctpTransport::OpenSctpSocket() {
   usrsctp_register_address(reinterpret_cast<void*>(id_));
   return true;
 }
-
+//hua2 configure sctp parms...need to tune parm
 bool UsrsctpTransport::ConfigureSctpSocket() {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(sock_);

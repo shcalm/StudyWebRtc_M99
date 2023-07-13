@@ -59,15 +59,15 @@ const int STRONG_PING_INTERVAL = 1000 * STUN_PING_PACKET_SIZE / 1000;  // 480ms.
 const int WEAK_PING_INTERVAL = 1000 * STUN_PING_PACKET_SIZE / 10000;   // 48ms.
 const int WEAK_OR_STABILIZING_WRITABLE_CONNECTION_PING_INTERVAL = 900;
 const int STRONG_AND_STABLE_WRITABLE_CONNECTION_PING_INTERVAL = 2500;
-const int CONNECTION_WRITE_CONNECT_TIMEOUT = 5 * 1000;  // 5 seconds
+const int CONNECTION_WRITE_CONNECT_TIMEOUT = 5 * 1000;  // 5 seconds hua2 if it is writeable
 const uint32_t CONNECTION_WRITE_CONNECT_FAILURES = 5;   // 5 pings
 
 const int STUN_KEEPALIVE_INTERVAL = 10 * 1000;  // 10 seconds
-
+//hua2 p2p constants
 const int MIN_CONNECTION_LIFETIME = 10 * 1000;          // 10 seconds.
 const int DEAD_CONNECTION_RECEIVE_TIMEOUT = 30 * 1000;  // 30 seconds.
 const int WEAK_CONNECTION_RECEIVE_TIMEOUT = 2500;       // 2.5 seconds
-const int CONNECTION_WRITE_TIMEOUT = 15 * 1000;         // 15 seconds
+const int CONNECTION_WRITE_TIMEOUT = 15 * 1000;         // 15 seconds connection timeout will come to failed state if all connections timeout
 // There is no harm to keep this value high other than a small amount
 // of increased memory, but in some networks (2G), we observe up to 60s RTTs.
 const int CONNECTION_RESPONSE_TIMEOUT = 60 * 1000;  // 60 seconds

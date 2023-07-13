@@ -346,7 +346,7 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
       av_frame_->linesize[kUPlaneIndex], av_frame_->data[kVPlaneIndex],
       av_frame_->linesize[kVPlaneIndex],
       // To keep reference alive.
-      [frame_buffer] {});
+      [frame_buffer] {}); // 闭包会持有引用.
 
   if (preferred_output_format_ == VideoFrameBuffer::Type::kNV12) {
     const I420BufferInterface* cropped_i420 = cropped_buffer->GetI420();

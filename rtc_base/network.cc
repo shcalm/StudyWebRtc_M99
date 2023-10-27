@@ -649,7 +649,7 @@ void BasicNetworkManager::ConvertIfAddrs(struct ifaddrs* interfaces,
     }
   }
 }
-
+//hua2 get ip address from NETLINK
 bool BasicNetworkManager::CreateNetworks(bool include_ignored,
                                          NetworkList* networks) const {
   struct ifaddrs* interfaces;
